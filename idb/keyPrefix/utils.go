@@ -58,7 +58,7 @@ func (kp KeyPrefix) Compare(other KeyPrefix) int {
 	return 0
 }
 
-func Decode(slice *[]byte, result *KeyPrefix) bool {
+func (KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
 		return false

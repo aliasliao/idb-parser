@@ -18,7 +18,7 @@ func ASCIIToUTF16(s string) U16string {
 }
 
 func EncodeStringWithLength(value U16string, into *string) {
-	varint.EncodeVarInt(len(value), into)
+	varint.EncodeVarInt(int64(len(value)), into)
 	EncodeString(value, into)
 }
 
@@ -44,8 +44,27 @@ func DecodeInt(slice *[]byte, value *int64) bool {
 	}
 	*value = ret
 
-	sliceValue = (sliceValue)[len(sliceValue):]
-	*slice = sliceValue
+	*slice = sliceValue[len(sliceValue):]
+	return true
+}
+
+func DecodeByte(slice *[]byte, value *byte) bool {
+	sliceValue := *slice
+	if len(sliceValue) == 0 {
+		return false
+	}
+	*value = sliceValue[0]
+	*slice = sliceValue[1:]
+	return true
+}
+
+func DecodeBool(slice *[]byte, value *bool) bool {
+	sliceValue := *slice
+	if len(sliceValue) == 0 {
+		return false
+	}
+	*value = sliceValue[0] != 0
+	*slice = sliceValue[1:]
 	return true
 }
 
@@ -58,4 +77,26 @@ func CompareInts(a, b int64) int {
 		return 1
 	}
 	return 0
+}
+
+type KeyType interface {
+	Compare(KeyType) int
+	Decode(*[]byte, *KeyType) bool
+}
+
+func CompareGeneric[K KeyType](a, b []byte, onlyCompareIndexKeys bool) int {
+	var keyA KeyType
+	var tmp K
+	sliceA := append([]byte{}, a...)
+	if !tmp.Decode(&sliceA, &keyA) {
+		return 0
+	}
+
+	var keyB KeyType
+	sliceB := append([]byte{}, b...)
+	if !tmp.Decode(&sliceB, &keyB) {
+		return 0
+	}
+
+	return keyA.(K).Compare(keyB)
 }
