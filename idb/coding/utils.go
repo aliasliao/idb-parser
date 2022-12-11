@@ -40,7 +40,7 @@ func DecodeInt(slice *[]byte, value *int64) bool {
 	}
 	var ret int64 = 0
 	for i, c := range sliceValue {
-		ret |= c << (i * 8)
+		ret |= int64(c) << (i * 8)
 	}
 	*value = ret
 
@@ -79,24 +79,28 @@ func CompareInts(a, b int64) int {
 	return 0
 }
 
-type KeyType interface {
-	Compare(KeyType) int
-	Decode(*[]byte, *KeyType) bool
+type KeyType[T interface{}] interface {
+	Compare(other T) int
+	Decode(*[]byte, *T) bool
 }
 
-func CompareGeneric[K KeyType](a, b []byte, onlyCompareIndexKeys bool) int {
-	var keyA KeyType
-	var tmp K
+func CompareGeneric[T KeyType[T]](a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
+	var tmp T
+
+	var keyA T
 	sliceA := append([]byte{}, a...)
 	if !tmp.Decode(&sliceA, &keyA) {
+		*ok = false
 		return 0
 	}
 
-	var keyB KeyType
+	var keyB T
 	sliceB := append([]byte{}, b...)
 	if !tmp.Decode(&sliceB, &keyB) {
+		*ok = false
 		return 0
 	}
 
-	return keyA.(K).Compare(keyB)
+	*ok = true
+	return keyA.Compare(keyB)
 }
