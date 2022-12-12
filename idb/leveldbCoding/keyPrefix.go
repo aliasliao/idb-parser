@@ -21,42 +21,42 @@ const (
 	kMinimumIndexId byte = 30
 )
 
-func (kp KeyPrefix) Type() Type {
-	if kp.databaseId == 0 {
+func (k KeyPrefix) Type() Type {
+	if k.databaseId == 0 {
 		return GlobalMetadata
 	}
-	if kp.objectStoreId == 0 {
+	if k.objectStoreId == 0 {
 		return DatabaseMetadata
 	}
-	if kp.indexId == int64(KObjectStoreDataIndexId) {
+	if k.indexId == int64(KObjectStoreDataIndexId) {
 		return ObjectStoreData
 	}
-	if kp.indexId == int64(KExistsEntryIndexId) {
+	if k.indexId == int64(KExistsEntryIndexId) {
 		return ExistsEntry
 	}
-	if kp.indexId == int64(KBlobEntryIndexId) {
+	if k.indexId == int64(KBlobEntryIndexId) {
 		return BlobEntry
 	}
-	if kp.indexId >= int64(kMinimumIndexId) {
+	if k.indexId >= int64(kMinimumIndexId) {
 		return IndexData
 	}
 	return InvalidType
 }
 
-func (kp KeyPrefix) Compare(other KeyPrefix) int {
-	if kp.databaseId != other.databaseId {
-		return CompareInts(kp.databaseId, other.databaseId)
+func (k KeyPrefix) Compare(other KeyPrefix) int {
+	if k.databaseId != other.databaseId {
+		return CompareInts(k.databaseId, other.databaseId)
 	}
-	if kp.objectStoreId != other.objectStoreId {
-		return CompareInts(kp.objectStoreId, other.objectStoreId)
+	if k.objectStoreId != other.objectStoreId {
+		return CompareInts(k.objectStoreId, other.objectStoreId)
 	}
-	if kp.indexId != other.indexId {
-		return CompareInts(kp.indexId, other.indexId)
+	if k.indexId != other.indexId {
+		return CompareInts(k.indexId, other.indexId)
 	}
 	return 0
 }
 
-func (KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
+func (k KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
 		return false

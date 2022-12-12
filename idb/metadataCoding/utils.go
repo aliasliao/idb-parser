@@ -15,8 +15,8 @@ type NameAndVersion struct {
 }
 
 func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []NameAndVersion {
-	startKey := leveldbCoding.EncodeMinKeyForOrigin(originIdentifier)
-	stopKey := leveldbCoding.EncodeStopKeyForOrigin(originIdentifier)
+	startKey := leveldbCoding.DataBaseNameKey{}.EncodeMinKeyForOrigin(originIdentifier)
+	stopKey := leveldbCoding.DataBaseNameKey{}.EncodeStopKeyForOrigin(originIdentifier)
 	iter := db.NewIterator(nil, nil)
 	found := iter.Seek([]byte(startKey))
 	fmt.Printf("it.key=%v\nit.ketStr=%v\nstartKey=%v\nstopKey=%v\nfound=%v\n", iter.Key(), string(iter.Key()), []byte(startKey), stopKey, found)

@@ -4,6 +4,32 @@ import (
 	"bytes"
 )
 
+type KeyType[T interface{}] interface {
+	Compare(other T) int
+	Decode(*[]byte, *T) bool
+}
+
+func CompareGeneric[T KeyType[T]](a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
+	var tmp T
+
+	var keyA T
+	sliceA := append([]byte{}, a...)
+	if !tmp.Decode(&sliceA, &keyA) {
+		*ok = false
+		return 0
+	}
+
+	var keyB T
+	sliceB := append([]byte{}, b...)
+	if !tmp.Decode(&sliceB, &keyB) {
+		*ok = false
+		return 0
+	}
+
+	*ok = true
+	return keyA.Compare(keyB)
+}
+
 func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	sliceA := append([]byte{}, a...)
 	sliceB := append([]byte{}, b...)
@@ -41,12 +67,14 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return 0
 		}
 		if typeByteA == KScopesPrefixByte {
-			return bytes.Compare(sliceA, sliceB)
+			return bytes.Compare(sliceA, sliceB) // TODO: verify
 		}
 		if typeByteA == KDatabaseFreeListTypeByte {
-			return CompareGeneric[DataBaseFreeListKey](sliceA, sliceB, onlyCompareIndexKeys, ok)
+			return CompareGeneric[DataBaseFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
-		// TODO
+		if typeByteA == KDatabaseNameTypeByte {
+			return CompareGeneric[DataBaseNameKey](a, b, false, ok)
+		}
 	}
 
 	return 1

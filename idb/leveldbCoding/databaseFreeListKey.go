@@ -17,10 +17,18 @@ func (DataBaseFreeListKey) Decode(slice *[]byte, k *DataBaseFreeListKey) bool {
 	if !(KeyPrefix{}.Decode(slice, &prefix)) {
 		return false
 	}
+	if prefix.databaseId != 0 && prefix.objectStoreId != 0 || prefix.indexId != 0 {
+		return false // DCHECK
+	}
+
 	var typeByte byte
 	if !DecodeByte(slice, &typeByte) {
 		return false
 	}
+	if typeByte != KDatabaseFreeListTypeByte {
+		return false // DCHECK
+	}
+
 	if !varint.DecodeVarInt(slice, &k.databaseId) {
 		return false
 	}
