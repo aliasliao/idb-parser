@@ -1,9 +1,9 @@
-package coding
+package leveldbCoding
 
 import (
 	"encoding/binary"
 
-	"idb-parser/idb/coding/varint"
+	"idb-parser/idb/leveldbCoding/varint"
 )
 
 type U16string = []uint16

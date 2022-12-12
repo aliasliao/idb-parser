@@ -1,4 +1,4 @@
-package coding
+package leveldbCoding
 
 import (
 	"encoding/binary"

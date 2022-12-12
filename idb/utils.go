@@ -6,12 +6,12 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 
-	"idb-parser/idb/coding"
 	"idb-parser/idb/databaseNameKey"
+	"idb-parser/idb/leveldbCoding"
 )
 
 type NameAndVersion struct {
-	name    coding.U16string
+	name    leveldbCoding.U16string
 	version int64
 }
 

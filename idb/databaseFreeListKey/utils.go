@@ -1,9 +1,9 @@
 package databaseFreeListKey
 
 import (
-	"idb-parser/idb/coding"
-	"idb-parser/idb/coding/varint"
 	"idb-parser/idb/keyPrefix"
+	"idb-parser/idb/leveldbCoding"
+	"idb-parser/idb/leveldbCoding/varint"
 )
 
 type DataBaseFreeListKey struct {
@@ -11,7 +11,7 @@ type DataBaseFreeListKey struct {
 }
 
 func (k DataBaseFreeListKey) Compare(other DataBaseFreeListKey) int {
-	return coding.CompareInts(k.databaseId, other.databaseId)
+	return leveldbCoding.CompareInts(k.databaseId, other.databaseId)
 }
 
 func (DataBaseFreeListKey) Decode(slice *[]byte, k *DataBaseFreeListKey) bool {
@@ -20,7 +20,7 @@ func (DataBaseFreeListKey) Decode(slice *[]byte, k *DataBaseFreeListKey) bool {
 		return false
 	}
 	var typeByte byte
-	if !coding.DecodeByte(slice, &typeByte) {
+	if !leveldbCoding.DecodeByte(slice, &typeByte) {
 		return false
 	}
 	if !varint.DecodeVarInt(slice, &k.databaseId) {

@@ -1,4 +1,4 @@
-package coding
+package leveldbCoding
 
 const (
 	KDefaultInlineBufferSize uint32 = 32

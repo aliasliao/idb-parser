@@ -3,9 +3,9 @@ package idb
 import (
 	"bytes"
 
-	"idb-parser/idb/coding"
 	"idb-parser/idb/databaseFreeListKey"
 	"idb-parser/idb/keyPrefix"
+	"idb-parser/idb/leveldbCoding"
 )
 
 func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
@@ -29,26 +29,26 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	switch prefixA.Type() {
 	case keyPrefix.GlobalMetadata:
 		var typeByteA byte
-		if !coding.DecodeByte(&sliceA, &typeByteA) {
+		if !leveldbCoding.DecodeByte(&sliceA, &typeByteA) {
 			*ok = false
 			return 0
 		}
 		var typeByteB byte
-		if !coding.DecodeByte(&sliceB, &typeByteB) {
+		if !leveldbCoding.DecodeByte(&sliceB, &typeByteB) {
 			*ok = false
 			return 0
 		}
 		if x := int(typeByteA) - int(typeByteB); x != 0 {
 			return x
 		}
-		if typeByteA < coding.KMaxSimpleGlobalMetaDataTypeByte {
+		if typeByteA < leveldbCoding.KMaxSimpleGlobalMetaDataTypeByte {
 			return 0
 		}
-		if typeByteA == coding.KScopesPrefixByte {
+		if typeByteA == leveldbCoding.KScopesPrefixByte {
 			return bytes.Compare(sliceA, sliceB)
 		}
-		if typeByteA == coding.KDatabaseFreeListTypeByte {
-			return coding.CompareGeneric[databaseFreeListKey.DataBaseFreeListKey](sliceA, sliceB, onlyCompareIndexKeys, ok)
+		if typeByteA == leveldbCoding.KDatabaseFreeListTypeByte {
+			return leveldbCoding.CompareGeneric[databaseFreeListKey.DataBaseFreeListKey](sliceA, sliceB, onlyCompareIndexKeys, ok)
 		}
 		// TODO
 	}

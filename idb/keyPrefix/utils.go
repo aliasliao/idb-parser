@@ -1,6 +1,6 @@
 package keyPrefix
 
-import "idb-parser/idb/coding"
+import "idb-parser/idb/leveldbCoding"
 
 type KeyPrefix struct {
 	databaseId    int64
@@ -30,13 +30,13 @@ func (kp KeyPrefix) Type() Type {
 	if kp.objectStoreId == 0 {
 		return DatabaseMetadata
 	}
-	if kp.indexId == int64(coding.KObjectStoreDataIndexId) {
+	if kp.indexId == int64(leveldbCoding.KObjectStoreDataIndexId) {
 		return ObjectStoreData
 	}
-	if kp.indexId == int64(coding.KExistsEntryIndexId) {
+	if kp.indexId == int64(leveldbCoding.KExistsEntryIndexId) {
 		return ExistsEntry
 	}
-	if kp.indexId == int64(coding.KBlobEntryIndexId) {
+	if kp.indexId == int64(leveldbCoding.KBlobEntryIndexId) {
 		return BlobEntry
 	}
 	if kp.indexId >= int64(kMinimumIndexId) {
@@ -47,13 +47,13 @@ func (kp KeyPrefix) Type() Type {
 
 func (kp KeyPrefix) Compare(other KeyPrefix) int {
 	if kp.databaseId != other.databaseId {
-		return coding.CompareInts(kp.databaseId, other.databaseId)
+		return leveldbCoding.CompareInts(kp.databaseId, other.databaseId)
 	}
 	if kp.objectStoreId != other.objectStoreId {
-		return coding.CompareInts(kp.objectStoreId, other.objectStoreId)
+		return leveldbCoding.CompareInts(kp.objectStoreId, other.objectStoreId)
 	}
 	if kp.indexId != other.indexId {
-		return coding.CompareInts(kp.indexId, other.indexId)
+		return leveldbCoding.CompareInts(kp.indexId, other.indexId)
 	}
 	return 0
 }
@@ -76,21 +76,21 @@ func (KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 
 	{
 		tmp := sliceValue[0:databaseIdBytes]
-		if !coding.DecodeInt(&tmp, &(result.databaseId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.databaseId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[databaseIdBytes:]
 	{
 		tmp := sliceValue[0:objectStoreIdBytes]
-		if !coding.DecodeInt(&tmp, &(result.objectStoreId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.objectStoreId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[objectStoreIdBytes:]
 	{
 		tmp := sliceValue[0:indexIdBytes]
-		if !coding.DecodeInt(&tmp, &(result.indexId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.indexId)) {
 			return false
 		}
 	}
