@@ -1,6 +1,4 @@
-package keyPrefix
-
-import "idb-parser/idb/leveldbCoding"
+package leveldbCoding
 
 type KeyPrefix struct {
 	databaseId    int64
@@ -30,13 +28,13 @@ func (kp KeyPrefix) Type() Type {
 	if kp.objectStoreId == 0 {
 		return DatabaseMetadata
 	}
-	if kp.indexId == int64(leveldbCoding.KObjectStoreDataIndexId) {
+	if kp.indexId == int64(KObjectStoreDataIndexId) {
 		return ObjectStoreData
 	}
-	if kp.indexId == int64(leveldbCoding.KExistsEntryIndexId) {
+	if kp.indexId == int64(KExistsEntryIndexId) {
 		return ExistsEntry
 	}
-	if kp.indexId == int64(leveldbCoding.KBlobEntryIndexId) {
+	if kp.indexId == int64(KBlobEntryIndexId) {
 		return BlobEntry
 	}
 	if kp.indexId >= int64(kMinimumIndexId) {
@@ -47,13 +45,13 @@ func (kp KeyPrefix) Type() Type {
 
 func (kp KeyPrefix) Compare(other KeyPrefix) int {
 	if kp.databaseId != other.databaseId {
-		return leveldbCoding.CompareInts(kp.databaseId, other.databaseId)
+		return CompareInts(kp.databaseId, other.databaseId)
 	}
 	if kp.objectStoreId != other.objectStoreId {
-		return leveldbCoding.CompareInts(kp.objectStoreId, other.objectStoreId)
+		return CompareInts(kp.objectStoreId, other.objectStoreId)
 	}
 	if kp.indexId != other.indexId {
-		return leveldbCoding.CompareInts(kp.indexId, other.indexId)
+		return CompareInts(kp.indexId, other.indexId)
 	}
 	return 0
 }
@@ -76,21 +74,21 @@ func (KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 
 	{
 		tmp := sliceValue[0:databaseIdBytes]
-		if !leveldbCoding.DecodeInt(&tmp, &(result.databaseId)) {
+		if !DecodeInt(&tmp, &(result.databaseId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[databaseIdBytes:]
 	{
 		tmp := sliceValue[0:objectStoreIdBytes]
-		if !leveldbCoding.DecodeInt(&tmp, &(result.objectStoreId)) {
+		if !DecodeInt(&tmp, &(result.objectStoreId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[objectStoreIdBytes:]
 	{
 		tmp := sliceValue[0:indexIdBytes]
-		if !leveldbCoding.DecodeInt(&tmp, &(result.indexId)) {
+		if !DecodeInt(&tmp, &(result.indexId)) {
 			return false
 		}
 	}

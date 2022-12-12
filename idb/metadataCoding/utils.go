@@ -1,4 +1,4 @@
-package idb
+package metadataCoding
 
 import (
 	"fmt"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/syndtr/goleveldb/leveldb"
 
-	"idb-parser/idb/databaseNameKey"
 	"idb-parser/idb/leveldbCoding"
 )
 
@@ -16,8 +15,8 @@ type NameAndVersion struct {
 }
 
 func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []NameAndVersion {
-	startKey := databaseNameKey.EncodeMinKeyForOrigin(originIdentifier)
-	stopKey := databaseNameKey.EncodeStopKeyForOrigin(originIdentifier)
+	startKey := leveldbCoding.EncodeMinKeyForOrigin(originIdentifier)
+	stopKey := leveldbCoding.EncodeStopKeyForOrigin(originIdentifier)
 	iter := db.NewIterator(nil, nil)
 	found := iter.Seek([]byte(startKey))
 	fmt.Printf("it.key=%v\nit.ketStr=%v\nstartKey=%v\nstopKey=%v\nfound=%v\n", iter.Key(), string(iter.Key()), []byte(startKey), stopKey, found)

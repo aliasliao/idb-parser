@@ -8,7 +8,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
-	"idb-parser/idb"
+	"idb-parser/idb/metadataCoding"
 )
 
 func main() {
@@ -43,5 +43,5 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	idb.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
 }
