@@ -63,6 +63,7 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 		if x := int(typeByteA) - int(typeByteB); x != 0 {
 			return x
 		}
+
 		if typeByteA < KMaxSimpleGlobalMetaDataTypeByte {
 			return 0
 		}
@@ -73,9 +74,67 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return CompareGeneric[DataBaseFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KDatabaseNameTypeByte {
-			return CompareGeneric[DataBaseNameKey](a, b, false, ok)
+			return CompareGeneric[DatabaseNameKey](a, b, false, ok)
 		}
+	case DatabaseMetadata:
+		var typeByteA byte
+		if !DecodeByte(&sliceA, &typeByteA) {
+			*ok = false
+			return 0
+		}
+		var typeByteB byte
+		if !DecodeByte(&sliceB, &typeByteB) {
+			*ok = false
+			return 0
+		}
+		if x := int(typeByteA) - int(typeByteB); x != 0 {
+			return x
+		}
+
+		if typeByteA < byte(MaxSimpleMetadataType) {
+			return 0
+		}
+		if typeByteA == KObjectStoreMetaDataTypeByte {
+			return CompareGeneric[ObjectStoreMetaDataKey](a, b, onlyCompareIndexKeys, ok)
+		}
+		if typeByteA == KIndexMetaDataTypeByte {
+			return CompareGeneric[IndexMetaDataKey](a, b, false, ok)
+		}
+		if typeByteA == KObjectStoreFreeListTypeByte {
+			return CompareGeneric[ObjectStoreFreeListKey](a, b, onlyCompareIndexKeys, ok)
+		}
+		if typeByteA == KIndexFreeListTypeByte {
+			return CompareGeneric[IndexFreeListKey](a, b, false, ok)
+		}
+		if typeByteA == KObjectStoreNamesTypeByte {
+			return CompareGeneric[ObjectStoreNamesKey](a, b, onlyCompareIndexKeys, ok)
+		}
+		if typeByteA == KIndexNamesKeyTypeByte {
+			return CompareGeneric[IndexNamesKey](a, b, false, ok)
+		}
+	case ObjectStoreData:
+		if len(sliceA) == 0 || len(sliceB) == 0 {
+			return CompareSizes(len(sliceA), len(sliceB))
+		}
+		return CompareSuffix[ObjectStoreDataKey](&sliceA, &sliceB, false, ok)
+	case ExistsEntry:
+		if len(sliceA) == 0 || len(sliceB) == 0 {
+			return CompareSizes(len(sliceA), len(sliceB))
+		}
+		return CompareSuffix[ExistsExtryKey](&sliceA, &sliceB, false, ok)
+	case BlobEntry:
+		if len(sliceA) == 0 || len(sliceB) == 0 {
+			return CompareSizes(len(sliceA), len(sliceB))
+		}
+		return CompareSuffix[BlobEntryKey](&sliceA, &sliceB, false, ok)
+	case IndexData:
+		if len(sliceA) == 0 || len(sliceB) == 0 {
+			return CompareSizes(len(sliceA), len(sliceB))
+		}
+		return CompareSuffix[IndexDataKey](&sliceA, &sliceB, false, ok)
+	case InvalidType:
 	}
 
-	return 1
+	*ok = false
+	return 0
 }

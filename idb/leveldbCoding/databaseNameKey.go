@@ -1,26 +1,26 @@
 package leveldbCoding
 
-type DataBaseNameKey struct {
+type DatabaseNameKey struct {
 	origin       U16string
 	databaseName U16string
 }
 
-func (k DataBaseNameKey) EncodeMinKeyForOrigin(originIdentifier string) string {
+func (k DatabaseNameKey) EncodeMinKeyForOrigin(originIdentifier string) string {
 	return k.Encode(originIdentifier, U16string{})
 }
 
-func (k DataBaseNameKey) EncodeStopKeyForOrigin(originIdentifier string) string {
+func (k DatabaseNameKey) EncodeStopKeyForOrigin(originIdentifier string) string {
 	return k.EncodeMinKeyForOrigin(originIdentifier + "\x01")
 }
 
-func (k DataBaseNameKey) Encode(originIdentifier string, databaseName U16string) string {
+func (k DatabaseNameKey) Encode(originIdentifier string, databaseName U16string) string {
 	ret := string([]byte{0, 0, 0, 0, KDatabaseNameTypeByte})
 	EncodeStringWithLength(ASCIIToUTF16(originIdentifier), &ret)
 	EncodeStringWithLength(databaseName, &ret)
 	return ret
 }
 
-func (k DataBaseNameKey) Decode(slice *[]byte, result *DataBaseNameKey) bool {
+func (k DatabaseNameKey) Decode(slice *[]byte, result *DatabaseNameKey) bool {
 	var prefix KeyPrefix
 	if !(KeyPrefix{}).Decode(slice, &prefix) {
 		return false
@@ -46,7 +46,7 @@ func (k DataBaseNameKey) Decode(slice *[]byte, result *DataBaseNameKey) bool {
 	return true
 }
 
-func (k DataBaseNameKey) Compare(other DataBaseNameKey) int {
+func (k DatabaseNameKey) Compare(other DatabaseNameKey) int {
 	if x := CompareU16String(k.origin, other.origin); x != 0 {
 		return x
 	}

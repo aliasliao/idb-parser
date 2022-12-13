@@ -6,22 +6,22 @@ type KeyPrefix struct {
 	indexId       int64
 }
 
-type Type uint8
+type KeyPrefixType uint8
 
 const (
-	GlobalMetadata   Type = 0
-	DatabaseMetadata      = 1
-	ObjectStoreData       = 2
-	ExistsEntry           = 3
-	IndexData             = 4
-	InvalidType           = 5
-	BlobEntry             = 6
+	GlobalMetadata KeyPrefixType = iota
+	DatabaseMetadata
+	ObjectStoreData
+	ExistsEntry
+	IndexData
+	InvalidType
+	BlobEntry
 )
 const (
 	kMinimumIndexId byte = 30
 )
 
-func (k KeyPrefix) Type() Type {
+func (k KeyPrefix) Type() KeyPrefixType {
 	if k.databaseId == 0 {
 		return GlobalMetadata
 	}
