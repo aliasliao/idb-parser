@@ -6,8 +6,6 @@ import (
 	"idb-parser/idb/leveldbCoding/varint"
 )
 
-type U16string = []uint16
-
 func ASCIIToUTF16(s string) U16string {
 	list := []byte(s)
 	ret := make(U16string, len(list))
@@ -21,16 +19,26 @@ func EncodeStringWithLength(value U16string, into *string) {
 	varint.EncodeVarInt(int64(len(value)), into)
 	EncodeString(value, into)
 }
+
 func DecodeStringWithLength(slice *[]byte, value *U16string) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
 		return false
 	}
-	var length int64 = 0
-	if !varint.DecodeVarInt(&sliceValue, &length) || length == 0 {
+	var strLen int64 = 0
+	if !varint.DecodeVarInt(&sliceValue, &strLen) || strLen == 0 {
 		return false
 	}
-	// TODO
+	bytesLen := int(strLen) * 2
+	if len(sliceValue) < bytesLen {
+		return false
+	}
+	buf := sliceValue[0:bytesLen]
+	if !DecodeString(&buf, value) {
+		return false
+	}
+	*slice = sliceValue[bytesLen:]
+	return true
 }
 
 func EncodeString(from U16string, into *string) {
@@ -44,6 +52,26 @@ func EncodeString(from U16string, into *string) {
 	*into += string(buf)
 }
 
+func DecodeString(slice *[]byte, value *U16string) bool {
+	sliceValue := *slice
+	bytesLen := len(sliceValue)
+	if bytesLen == 0 {
+		*value = U16string{}
+		return true
+	}
+	if bytesLen%2 != 0 {
+		return false // DCHECK
+	}
+	strLen := bytesLen / 2
+	ret := make(U16string, strLen)
+	for i := 0; i < strLen; i++ {
+		ret[i] = binary.BigEndian.Uint16(sliceValue[i:])
+	}
+	*value = ret
+	*slice = sliceValue[len(sliceValue):]
+	return true
+}
+
 func DecodeInt(slice *[]byte, value *int64) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
@@ -54,7 +82,6 @@ func DecodeInt(slice *[]byte, value *int64) bool {
 		ret |= int64(c) << (i * 8)
 	}
 	*value = ret
-
 	*slice = sliceValue[len(sliceValue):]
 	return true
 }

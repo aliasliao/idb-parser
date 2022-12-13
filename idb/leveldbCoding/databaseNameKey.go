@@ -45,3 +45,10 @@ func (k DataBaseNameKey) Decode(slice *[]byte, result *DataBaseNameKey) bool {
 	}
 	return true
 }
+
+func (k DataBaseNameKey) Compare(other DataBaseNameKey) int {
+	if x := CompareU16String(k.origin, other.origin); x != 0 {
+		return x
+	}
+	return CompareU16String(k.databaseName, other.databaseName)
+}
