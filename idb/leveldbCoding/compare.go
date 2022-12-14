@@ -6,7 +6,9 @@ import (
 	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
+	"idb-parser/idb/leveldbCoding/indexMetaDataKey"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
+	"idb-parser/idb/leveldbCoding/objectStoreFreeListKey"
 	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
 )
 
@@ -104,10 +106,10 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return CompareGeneric[objectStoreMetaDataKey.ObjectStoreMetaDataKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KIndexMetaDataTypeByte {
-			return CompareGeneric[IndexMetaDataKey](a, b, false, ok)
+			return CompareGeneric[indexMetaDataKey.IndexMetaDataKey](a, b, false, ok)
 		}
 		if typeByteA == KObjectStoreFreeListTypeByte {
-			return CompareGeneric[ObjectStoreFreeListKey](a, b, onlyCompareIndexKeys, ok)
+			return CompareGeneric[objectStoreFreeListKey.ObjectStoreFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KIndexFreeListTypeByte {
 			return CompareGeneric[IndexFreeListKey](a, b, false, ok)
