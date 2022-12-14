@@ -1,4 +1,4 @@
-package leveldbCoding
+package databaseMetaDataKey
 
 type DatabaseMetaDataKey struct {
 }

@@ -1,9 +1,11 @@
-package leveldbCoding
+package keyPrefix
+
+import "idb-parser/idb/leveldbCoding"
 
 type KeyPrefix struct {
-	databaseId    int64
-	objectStoreId int64
-	indexId       int64
+	DatabaseId    int64
+	ObjectStoreId int64
+	IndexId       int64
 }
 
 type KeyPrefixType uint8
@@ -22,36 +24,36 @@ const (
 )
 
 func (k KeyPrefix) Type() KeyPrefixType {
-	if k.databaseId == 0 {
+	if k.DatabaseId == 0 {
 		return GlobalMetadata
 	}
-	if k.objectStoreId == 0 {
+	if k.ObjectStoreId == 0 {
 		return DatabaseMetadata
 	}
-	if k.indexId == int64(KObjectStoreDataIndexId) {
+	if k.IndexId == int64(leveldbCoding.KObjectStoreDataIndexId) {
 		return ObjectStoreData
 	}
-	if k.indexId == int64(KExistsEntryIndexId) {
+	if k.IndexId == int64(leveldbCoding.KExistsEntryIndexId) {
 		return ExistsEntry
 	}
-	if k.indexId == int64(KBlobEntryIndexId) {
+	if k.IndexId == int64(leveldbCoding.KBlobEntryIndexId) {
 		return BlobEntry
 	}
-	if k.indexId >= int64(kMinimumIndexId) {
+	if k.IndexId >= int64(kMinimumIndexId) {
 		return IndexData
 	}
 	return InvalidType
 }
 
 func (k KeyPrefix) Compare(other KeyPrefix) int {
-	if k.databaseId != other.databaseId {
-		return CompareInts(k.databaseId, other.databaseId)
+	if k.DatabaseId != other.DatabaseId {
+		return leveldbCoding.CompareInts(k.DatabaseId, other.DatabaseId)
 	}
-	if k.objectStoreId != other.objectStoreId {
-		return CompareInts(k.objectStoreId, other.objectStoreId)
+	if k.ObjectStoreId != other.ObjectStoreId {
+		return leveldbCoding.CompareInts(k.ObjectStoreId, other.ObjectStoreId)
 	}
-	if k.indexId != other.indexId {
-		return CompareInts(k.indexId, other.indexId)
+	if k.IndexId != other.IndexId {
+		return leveldbCoding.CompareInts(k.IndexId, other.IndexId)
 	}
 	return 0
 }
@@ -74,21 +76,21 @@ func (k KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 
 	{
 		tmp := sliceValue[0:databaseIdBytes]
-		if !DecodeInt(&tmp, &(result.databaseId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.DatabaseId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[databaseIdBytes:]
 	{
 		tmp := sliceValue[0:objectStoreIdBytes]
-		if !DecodeInt(&tmp, &(result.objectStoreId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.ObjectStoreId)) {
 			return false
 		}
 	}
 	sliceValue = sliceValue[objectStoreIdBytes:]
 	{
 		tmp := sliceValue[0:indexIdBytes]
-		if !DecodeInt(&tmp, &(result.indexId)) {
+		if !leveldbCoding.DecodeInt(&tmp, &(result.IndexId)) {
 			return false
 		}
 	}

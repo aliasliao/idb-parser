@@ -2,6 +2,12 @@ package leveldbCoding
 
 import (
 	"bytes"
+
+	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
+	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
+	"idb-parser/idb/leveldbCoding/databaseNameKey"
+	"idb-parser/idb/leveldbCoding/keyPrefix"
+	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
 )
 
 type KeyType[T interface{}] interface {
@@ -33,11 +39,11 @@ func CompareGeneric[T KeyType[T]](a, b []byte, onlyCompareIndexKeys bool, ok *bo
 func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	sliceA := append([]byte{}, a...)
 	sliceB := append([]byte{}, b...)
-	prefixA := KeyPrefix{}
-	prefixB := KeyPrefix{}
+	prefixA := keyPrefix.KeyPrefix{}
+	prefixB := keyPrefix.KeyPrefix{}
 
-	okA := KeyPrefix{}.Decode(&sliceA, &prefixA)
-	okB := KeyPrefix{}.Decode(&sliceB, &prefixB)
+	okA := keyPrefix.KeyPrefix{}.Decode(&sliceA, &prefixA)
+	okB := keyPrefix.KeyPrefix{}.Decode(&sliceB, &prefixB)
 	if !okA || !okB {
 		*ok = false
 		return 0
@@ -49,7 +55,7 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	}
 
 	switch prefixA.Type() {
-	case GlobalMetadata:
+	case keyPrefix.GlobalMetadata:
 		var typeByteA byte
 		if !DecodeByte(&sliceA, &typeByteA) {
 			*ok = false
@@ -71,12 +77,12 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return bytes.Compare(sliceA, sliceB) // TODO: verify
 		}
 		if typeByteA == KDatabaseFreeListTypeByte {
-			return CompareGeneric[DataBaseFreeListKey](a, b, onlyCompareIndexKeys, ok)
+			return CompareGeneric[databaseFreeListKey.DataBaseFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KDatabaseNameTypeByte {
-			return CompareGeneric[DatabaseNameKey](a, b, false, ok)
+			return CompareGeneric[databaseNameKey.DatabaseNameKey](a, b, false, ok)
 		}
-	case DatabaseMetadata:
+	case keyPrefix.DatabaseMetadata:
 		var typeByteA byte
 		if !DecodeByte(&sliceA, &typeByteA) {
 			*ok = false
@@ -91,11 +97,11 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return x
 		}
 
-		if typeByteA < byte(MaxSimpleMetadataType) {
+		if typeByteA < byte(databaseMetaDataKey.MaxSimpleMetadataType) {
 			return 0
 		}
 		if typeByteA == KObjectStoreMetaDataTypeByte {
-			return CompareGeneric[ObjectStoreMetaDataKey](a, b, onlyCompareIndexKeys, ok)
+			return CompareGeneric[objectStoreMetaDataKey.ObjectStoreMetaDataKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KIndexMetaDataTypeByte {
 			return CompareGeneric[IndexMetaDataKey](a, b, false, ok)
@@ -112,27 +118,27 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 		if typeByteA == KIndexNamesKeyTypeByte {
 			return CompareGeneric[IndexNamesKey](a, b, false, ok)
 		}
-	case ObjectStoreData:
+	case keyPrefix.ObjectStoreData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
 		return CompareSuffix[ObjectStoreDataKey](&sliceA, &sliceB, false, ok)
-	case ExistsEntry:
+	case keyPrefix.ExistsEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
 		return CompareSuffix[ExistsExtryKey](&sliceA, &sliceB, false, ok)
-	case BlobEntry:
+	case keyPrefix.BlobEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
 		return CompareSuffix[BlobEntryKey](&sliceA, &sliceB, false, ok)
-	case IndexData:
+	case keyPrefix.IndexData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
 		return CompareSuffix[IndexDataKey](&sliceA, &sliceB, false, ok)
-	case InvalidType:
+	case keyPrefix.InvalidType:
 	}
 
 	*ok = false
