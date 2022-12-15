@@ -6,10 +6,13 @@ import (
 	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
+	"idb-parser/idb/leveldbCoding/indexFreeListKey"
 	"idb-parser/idb/leveldbCoding/indexMetaDataKey"
+	"idb-parser/idb/leveldbCoding/indexNamesKey"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
 	"idb-parser/idb/leveldbCoding/objectStoreFreeListKey"
 	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
+	"idb-parser/idb/leveldbCoding/objectStoreNamesKey"
 )
 
 type KeyType[T interface{}] interface {
@@ -112,13 +115,13 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return CompareGeneric[objectStoreFreeListKey.ObjectStoreFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KIndexFreeListTypeByte {
-			return CompareGeneric[IndexFreeListKey](a, b, false, ok)
+			return CompareGeneric[indexFreeListKey.IndexFreeListKey](a, b, false, ok)
 		}
 		if typeByteA == KObjectStoreNamesTypeByte {
-			return CompareGeneric[ObjectStoreNamesKey](a, b, onlyCompareIndexKeys, ok)
+			return CompareGeneric[objectStoreNamesKey.ObjectStoreNamesKey](a, b, onlyCompareIndexKeys, ok)
 		}
 		if typeByteA == KIndexNamesKeyTypeByte {
-			return CompareGeneric[IndexNamesKey](a, b, false, ok)
+			return CompareGeneric[indexNamesKey.IndexNamesKey](a, b, false, ok)
 		}
 	case keyPrefix.ObjectStoreData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
