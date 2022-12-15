@@ -116,3 +116,13 @@ func CompareInts(a, b int64) int {
 	}
 	return 0
 }
+
+func CompareSizes(a, b int) int {
+	if a > b {
+		return 1
+	}
+	if a < b {
+		return -1
+	}
+	return 0
+}
