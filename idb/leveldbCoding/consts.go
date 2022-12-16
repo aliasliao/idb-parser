@@ -47,3 +47,7 @@ const (
 	KDatabaseLockPartition    int = 0
 	KObjectStoreLockPartition int = 1
 )
+
+const (
+	KMinimumIndexId byte = 30
+)

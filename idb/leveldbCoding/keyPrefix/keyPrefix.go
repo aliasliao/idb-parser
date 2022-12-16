@@ -20,7 +20,22 @@ const (
 	BlobEntry
 )
 const (
-	kMinimumIndexId byte = 30
+	kMaxDatabaseIdSizeBits     = 3
+	kMaxObjectStoreIdSizeBits  = 3
+	kMaxIndexIdSizeBits        = 2
+	kMaxDatabaseIdSizeBytes    = 1 << kMaxDatabaseIdSizeBits    // 8
+	kMaxObjectStoreIdSizeBytes = 1 << kMaxObjectStoreIdSizeBits // 8
+	kMaxIndexIdSizeBytes       = 1 << kMaxIndexIdSizeBits       // 4
+
+	kMaxDatabaseIdBits    = kMaxDatabaseIdSizeBytes*8 - 1    // 63
+	kMaxObjectStoreIdBits = kMaxObjectStoreIdSizeBytes*8 - 1 // 63
+	kMaxIndexIdBits       = kMaxIndexIdSizeBytes*8 - 1       // 31
+
+	kMaxDatabaseId    int64 = (1 << kMaxDatabaseIdBits) - 1    // max signed int64_t
+	kMaxObjectStoreId int64 = (1 << kMaxObjectStoreIdBits) - 1 // max signed int64_t
+	kMaxIndexId       int64 = (1 << kMaxIndexIdBits) - 1       // max signed int32_t
+
+	kInvalidId int64 = -1
 )
 
 func (k KeyPrefix) Type() KeyPrefixType {
@@ -39,7 +54,7 @@ func (k KeyPrefix) Type() KeyPrefixType {
 	if k.IndexId == int64(leveldbCoding.KBlobEntryIndexId) {
 		return BlobEntry
 	}
-	if k.IndexId >= int64(kMinimumIndexId) {
+	if k.IndexId >= int64(leveldbCoding.KMinimumIndexId) {
 		return IndexData
 	}
 	return InvalidType
@@ -97,4 +112,34 @@ func (k KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 	sliceValue = sliceValue[indexIdBytes:]
 	*slice = sliceValue
 	return true
+}
+
+func (k KeyPrefix) Encode() string {
+	if k.DatabaseId == kInvalidId || k.ObjectStoreId == kInvalidId || k.IndexId == kInvalidId {
+		panic("k.DatabaseId == kInvalidId || k.ObjectStoreId == kInvalidId || k.IndexId == kInvalidId")
+	}
+	return EncodeInternal(k.DatabaseId, k.ObjectStoreId, k.IndexId)
+}
+
+func EncodeInternal(databaseId, objectStoreId, indexId int64) string {
+	var databaseIdStr string
+	var objectSoreIdStr string
+	var indexIdStr string
+
+	leveldbCoding.EncodeIntSafely(databaseId, kMaxDatabaseId, &databaseIdStr)
+	leveldbCoding.EncodeIntSafely(objectStoreId, kMaxObjectStoreId, &objectSoreIdStr)
+	leveldbCoding.EncodeIntSafely(indexId, kMaxIndexId, &indexIdStr)
+
+	if len(databaseIdStr) > kMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > kMaxObjectStoreIdSizeBytes || len(indexIdStr) > kMaxIndexIdSizeBytes {
+		panic("len(databaseIdStr) > kMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > kMaxObjectStoreIdSizeBytes || len(indexIdStr) > kMaxIndexIdSizeBytes")
+	}
+
+	firstByteNum := (len(databaseIdStr)-1)<<(kMaxObjectStoreIdSizeBits+kMaxIndexIdSizeBits) | (len(objectSoreIdStr)-1)<<kMaxIndexIdSizeBits | (len(indexIdStr) - 1)
+	firstByte := byte(firstByteNum)
+
+	ret := string(firstByte)
+	ret += databaseIdStr
+	ret += objectSoreIdStr
+	ret += indexIdStr
+	return ret
 }

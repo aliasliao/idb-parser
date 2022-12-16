@@ -76,6 +76,32 @@ func DecodeString(slice *[]byte, value *U16string) bool {
 	return true
 }
 
+func EncodeIntSafely(value, max int64, into *string) {
+	if value > max {
+		panic("value > max")
+	}
+	EncodeInt(value, into)
+}
+
+func EncodeInt(value int64, into *string) {
+	if value < 0 {
+		panic("value < 0")
+	}
+	n := uint64(value)
+	if n == 0 {
+		*into = string(0)
+		return
+	}
+
+	var ret string
+	for n > 0 {
+		c := uint8(n)
+		ret += string(c)
+		n >>= 8
+	}
+	*into = ret
+}
+
 func DecodeInt(slice *[]byte, value *int64) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {

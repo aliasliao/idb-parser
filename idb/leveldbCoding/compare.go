@@ -45,7 +45,7 @@ func CompareGeneric[T KeyType[T]](a, b []byte, onlyCompareIndexKeys bool, ok *bo
 	return keyA.Compare(keyB)
 }
 
-func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
+func CompareInternal(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	sliceA := append([]byte{}, a...)
 	sliceB := append([]byte{}, b...)
 	prefixA := keyPrefix.KeyPrefix{}
@@ -152,4 +152,17 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 
 	*ok = false
 	return 0
+}
+
+func Compare(sliceA, sliceB []byte, onlyCompareIndexKeys bool) int {
+	var ok bool
+	result := CompareInternal(sliceA, sliceB, onlyCompareIndexKeys, &ok)
+	if !ok {
+		return 0
+	}
+	return result
+}
+
+func CompareKeys(sliceA, sliceB []byte) int {
+	return Compare(sliceA, sliceB, false)
 }
