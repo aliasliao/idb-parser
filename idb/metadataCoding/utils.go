@@ -6,14 +6,15 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 
 	"idb-parser/idb/leveldbCoding"
+	"idb-parser/idb/leveldbCoding/compare"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
 	"idb-parser/idb/leveldbCoding/varint"
 )
 
 type NameAndVersion struct {
-	name    leveldbCoding.U16string
-	version int64
+	Name    leveldbCoding.U16string
+	Version int64
 }
 
 func GetVarInt(db *leveldb.DB, key []byte, foundInt *int64) bool {
@@ -35,8 +36,8 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []Nam
 
 	it := db.NewIterator(nil, nil)
 	ok := it.Seek([]byte(startKey))
-	for ok && it.Valid() && leveldbCoding.CompareKeys(it.Key(), []byte(stopKey)) < 0 {
-		// Decode database name (in iterator key).
+	for ok && it.Valid() && compare.CompareKeys(it.Key(), []byte(stopKey)) < 0 {
+		// Decode database Name (in iterator key).
 		slice := it.Key()
 		var dbNameKey databaseNameKey.DatabaseNameKey
 		if !(databaseNameKey.DatabaseNameKey{}).Decode(&slice, &dbNameKey) || len(slice) != 0 {
@@ -52,7 +53,7 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []Nam
 			continue
 		}
 
-		// Look up version by id.
+		// Look up Version by id.
 		dbVersion := int64(DefaultVersion)
 		metaDataKey := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(dbId, databaseMetaDataKey.UserVersion)
 		metaDataKeySlice := []byte(metaDataKey)
@@ -63,8 +64,8 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []Nam
 
 		if dbVersion != DefaultVersion {
 			ret = append(ret, NameAndVersion{
-				name:    dbNameKey.DatabaseName,
-				version: dbVersion,
+				Name:    dbNameKey.DatabaseName,
+				Version: dbVersion,
 			})
 		}
 

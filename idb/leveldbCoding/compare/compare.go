@@ -1,8 +1,9 @@
-package leveldbCoding
+package compare
 
 import (
 	"bytes"
 
+	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/blobEntryKey"
 	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
@@ -66,12 +67,12 @@ func CompareInternal(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 	switch prefixA.Type() {
 	case keyPrefix.GlobalMetadata:
 		var typeByteA byte
-		if !DecodeByte(&sliceA, &typeByteA) {
+		if !leveldbCoding.DecodeByte(&sliceA, &typeByteA) {
 			*ok = false
 			return 0
 		}
 		var typeByteB byte
-		if !DecodeByte(&sliceB, &typeByteB) {
+		if !leveldbCoding.DecodeByte(&sliceB, &typeByteB) {
 			*ok = false
 			return 0
 		}
@@ -79,26 +80,26 @@ func CompareInternal(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 			return x
 		}
 
-		if typeByteA < KMaxSimpleGlobalMetaDataTypeByte {
+		if typeByteA < leveldbCoding.KMaxSimpleGlobalMetaDataTypeByte {
 			return 0
 		}
-		if typeByteA == KScopesPrefixByte {
+		if typeByteA == leveldbCoding.KScopesPrefixByte {
 			return bytes.Compare(sliceA, sliceB) // TODO: verify
 		}
-		if typeByteA == KDatabaseFreeListTypeByte {
+		if typeByteA == leveldbCoding.KDatabaseFreeListTypeByte {
 			return CompareGeneric[databaseFreeListKey.DataBaseFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
-		if typeByteA == KDatabaseNameTypeByte {
+		if typeByteA == leveldbCoding.KDatabaseNameTypeByte {
 			return CompareGeneric[databaseNameKey.DatabaseNameKey](a, b, false, ok)
 		}
 	case keyPrefix.DatabaseMetadata:
 		var typeByteA byte
-		if !DecodeByte(&sliceA, &typeByteA) {
+		if !leveldbCoding.DecodeByte(&sliceA, &typeByteA) {
 			*ok = false
 			return 0
 		}
 		var typeByteB byte
-		if !DecodeByte(&sliceB, &typeByteB) {
+		if !leveldbCoding.DecodeByte(&sliceB, &typeByteB) {
 			*ok = false
 			return 0
 		}
@@ -109,42 +110,42 @@ func CompareInternal(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 		if typeByteA < byte(databaseMetaDataKey.MaxSimpleMetadataType) {
 			return 0
 		}
-		if typeByteA == KObjectStoreMetaDataTypeByte {
+		if typeByteA == leveldbCoding.KObjectStoreMetaDataTypeByte {
 			return CompareGeneric[objectStoreMetaDataKey.ObjectStoreMetaDataKey](a, b, onlyCompareIndexKeys, ok)
 		}
-		if typeByteA == KIndexMetaDataTypeByte {
+		if typeByteA == leveldbCoding.KIndexMetaDataTypeByte {
 			return CompareGeneric[indexMetaDataKey.IndexMetaDataKey](a, b, false, ok)
 		}
-		if typeByteA == KObjectStoreFreeListTypeByte {
+		if typeByteA == leveldbCoding.KObjectStoreFreeListTypeByte {
 			return CompareGeneric[objectStoreFreeListKey.ObjectStoreFreeListKey](a, b, onlyCompareIndexKeys, ok)
 		}
-		if typeByteA == KIndexFreeListTypeByte {
+		if typeByteA == leveldbCoding.KIndexFreeListTypeByte {
 			return CompareGeneric[indexFreeListKey.IndexFreeListKey](a, b, false, ok)
 		}
-		if typeByteA == KObjectStoreNamesTypeByte {
+		if typeByteA == leveldbCoding.KObjectStoreNamesTypeByte {
 			return CompareGeneric[objectStoreNamesKey.ObjectStoreNamesKey](a, b, onlyCompareIndexKeys, ok)
 		}
-		if typeByteA == KIndexNamesKeyTypeByte {
+		if typeByteA == leveldbCoding.KIndexNamesKeyTypeByte {
 			return CompareGeneric[indexNamesKey.IndexNamesKey](a, b, false, ok)
 		}
 	case keyPrefix.ObjectStoreData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
-			return CompareSizes(len(sliceA), len(sliceB))
+			return leveldbCoding.CompareSizes(len(sliceA), len(sliceB))
 		}
 		return objectStoreDataKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.ExistsEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
-			return CompareSizes(len(sliceA), len(sliceB))
+			return leveldbCoding.CompareSizes(len(sliceA), len(sliceB))
 		}
 		return existsEntryKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.BlobEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
-			return CompareSizes(len(sliceA), len(sliceB))
+			return leveldbCoding.CompareSizes(len(sliceA), len(sliceB))
 		}
 		return blobEntryKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.IndexData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
-			return CompareSizes(len(sliceA), len(sliceB))
+			return leveldbCoding.CompareSizes(len(sliceA), len(sliceB))
 		}
 		return indexDataKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.InvalidType:

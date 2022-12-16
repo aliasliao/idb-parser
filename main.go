@@ -43,5 +43,8 @@ func main() {
 		log.Fatalln(err)
 	}
 
-	metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	res := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	for _, nv := range res {
+		log.Printf("version: %v, name: %s\n", nv.Version, nv.Name)
+	}
 }
