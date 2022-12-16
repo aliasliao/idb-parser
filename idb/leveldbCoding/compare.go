@@ -3,13 +3,17 @@ package leveldbCoding
 import (
 	"bytes"
 
+	"idb-parser/idb/leveldbCoding/blobEntryKey"
 	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
+	"idb-parser/idb/leveldbCoding/existsEntryKey"
+	"idb-parser/idb/leveldbCoding/indexDataKey"
 	"idb-parser/idb/leveldbCoding/indexFreeListKey"
 	"idb-parser/idb/leveldbCoding/indexMetaDataKey"
 	"idb-parser/idb/leveldbCoding/indexNamesKey"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
+	"idb-parser/idb/leveldbCoding/objectStoreDataKey"
 	"idb-parser/idb/leveldbCoding/objectStoreFreeListKey"
 	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
 	"idb-parser/idb/leveldbCoding/objectStoreNamesKey"
@@ -127,22 +131,22 @@ func Compare(a, b []byte, onlyCompareIndexKeys bool, ok *bool) int {
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
-		return CompareSuffix[ObjectStoreDataKey](&sliceA, &sliceB, false, ok)
+		return objectStoreDataKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.ExistsEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
-		return CompareSuffix[ExistsExtryKey](&sliceA, &sliceB, false, ok)
+		return existsEntryKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.BlobEntry:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
-		return CompareSuffix[BlobEntryKey](&sliceA, &sliceB, false, ok)
+		return blobEntryKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.IndexData:
 		if len(sliceA) == 0 || len(sliceB) == 0 {
 			return CompareSizes(len(sliceA), len(sliceB))
 		}
-		return CompareSuffix[IndexDataKey](&sliceA, &sliceB, false, ok)
+		return indexDataKey.CompareSuffix(&sliceA, &sliceB, false, ok)
 	case keyPrefix.InvalidType:
 	}
 
