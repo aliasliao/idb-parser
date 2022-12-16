@@ -1,8 +1,12 @@
 package leveldbCoding
 
 import (
+	"bytes"
 	"encoding/binary"
+	"fmt"
+	"math"
 
+	"idb-parser/idb/leveldbCoding/mojom"
 	"idb-parser/idb/leveldbCoding/varint"
 )
 
@@ -26,7 +30,7 @@ func DecodeStringWithLength(slice *[]byte, value *U16string) bool {
 		return false
 	}
 	var strLen int64 = 0
-	if !varint.DecodeVarInt(&sliceValue, &strLen) || strLen == 0 {
+	if !varint.DecodeVarInt(&sliceValue, &strLen) || strLen < 0 {
 		return false
 	}
 	bytesLen := int(strLen) * 2
@@ -86,6 +90,31 @@ func DecodeInt(slice *[]byte, value *int64) bool {
 	return true
 }
 
+func DecodeDouble(slice *[]byte, value *float64) bool {
+	sliceValue := *slice
+	if len(sliceValue) < 8 {
+		return false
+	}
+	bits := binary.BigEndian.Uint64(sliceValue)
+	*value = math.Float64frombits(bits)
+	*slice = sliceValue[8:]
+	return true
+}
+
+func DecodeBinary(slice *[]byte, value *[]byte) bool {
+	sliceValue := *slice
+	var binLen int64 = 0
+	if !varint.DecodeVarInt(&sliceValue, &binLen) || binLen < 0 { // fixed
+		return false
+	}
+	if len(sliceValue) < int(binLen) {
+		return false
+	}
+	*value = sliceValue[0:binLen]
+	*slice = sliceValue[binLen:]
+	return true
+}
+
 func DecodeByte(slice *[]byte, value *byte) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
@@ -125,4 +154,113 @@ func CompareSizes(a, b int) int {
 		return -1
 	}
 	return 0
+}
+
+func CompareTypes(a, b mojom.IDBKeyType) int {
+	return int(b - a)
+}
+
+func CompareEncodedBinary(sliceA, sliceB *[]byte, ok *bool) int {
+	var binA []byte
+	var binB []byte
+	if !DecodeBinary(sliceA, &binA) || !DecodeBinary(sliceB, &binB) {
+		*ok = false
+		return 0
+	}
+	*ok = true
+	return bytes.Compare(binA, binB)
+}
+
+func CompareEncodedStringWithLength(sliceA, sliceB *[]byte, ok *bool) int {
+	var strA U16string
+	var strB U16string
+	if !DecodeStringWithLength(sliceA, &strA) || !DecodeStringWithLength(sliceB, &strB) {
+		*ok = false
+		return 0
+	}
+	*ok = true
+	return CompareU16String(strA, strB)
+}
+
+func KeyTypeByteToKeyType(t byte) mojom.IDBKeyType {
+	switch t {
+	case KIndexedDBKeyNullTypeByte:
+		return mojom.Invalid
+	case KIndexedDBKeyArrayTypeByte:
+		return mojom.Array
+	case KIndexedDBKeyBinaryTypeByte:
+		return mojom.Binary
+	case KIndexedDBKeyStringTypeByte:
+		return mojom.String
+	case KIndexedDBKeyDateTypeByte:
+		return mojom.Date
+	case KIndexedDBKeyNumberTypeByte:
+		return mojom.Number
+	case KIndexedDBKeyMinKeyTypeByte:
+		return mojom.Min
+	}
+
+	panic(fmt.Sprintf("Get invalid type %v", t))
+}
+
+func CompareEncodedIDBKeys(sliceA, sliceB *[]byte, ok *bool) int {
+	*ok = true
+	var typeByteA byte = 0
+	if !DecodeByte(sliceA, &typeByteA) {
+		*ok = false
+		return 0
+	}
+	var typeByteB byte = 0
+	if !DecodeByte(sliceB, &typeByteB) {
+		*ok = false
+		return 0
+	}
+
+	if x := CompareTypes(KeyTypeByteToKeyType(typeByteA), KeyTypeByteToKeyType(typeByteB)); x != 0 {
+		return x
+	}
+
+	switch typeByteA {
+	case KIndexedDBKeyNullTypeByte:
+	case KIndexedDBKeyMinKeyTypeByte:
+		return 0
+	case KIndexedDBKeyArrayTypeByte:
+		{
+			var lenA int64 = 0
+			var lenB int64 = 0
+			if !varint.DecodeVarInt(sliceA, &lenA) || !varint.DecodeVarInt(sliceB, &lenB) {
+				*ok = false
+				return 0
+			}
+			for i := int64(0); i < lenA && i < lenB; i += 1 {
+				if result := CompareEncodedIDBKeys(sliceA, sliceB, ok); !*ok || result != 0 {
+					return result
+				}
+			}
+			return int(lenA - lenB)
+		}
+	case KIndexedDBKeyBinaryTypeByte:
+		return CompareEncodedBinary(sliceA, sliceB, ok)
+	case KIndexedDBKeyStringTypeByte:
+		return CompareEncodedStringWithLength(sliceA, sliceB, ok)
+	case KIndexedDBKeyDateTypeByte:
+	case KIndexedDBKeyNumberTypeByte:
+		{
+			var numA float64 = 0
+			var numB float64 = 0
+			if !DecodeDouble(sliceA, &numA) || !DecodeDouble(sliceB, &numB) {
+				*ok = false
+				return 0
+			}
+			if numA < numB {
+				return -1
+			}
+			if numA > numB {
+				return 1
+			}
+			return 0
+		}
+	}
+
+	panic(fmt.Sprintf("Get invalid type %v", typeByteA))
 }
