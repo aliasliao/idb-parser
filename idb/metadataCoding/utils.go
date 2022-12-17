@@ -14,6 +14,7 @@ import (
 
 type NameAndVersion struct {
 	Name    leveldbCoding.U16string
+	Id      int64
 	Version int64
 }
 
@@ -28,7 +29,7 @@ func GetVarInt(db *leveldb.DB, key []byte, foundInt *int64) bool {
 	return true
 }
 
-func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []NameAndVersion {
+func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) ([]NameAndVersion, error) {
 	var ret []NameAndVersion
 
 	startKey := databaseNameKey.DatabaseNameKey{}.EncodeMinKeyForOrigin(originIdentifier)
@@ -65,6 +66,7 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []Nam
 		if dbVersion != DefaultVersion {
 			ret = append(ret, NameAndVersion{
 				Name:    dbNameKey.DatabaseName,
+				Id:      dbId,
 				Version: dbVersion,
 			})
 		}
@@ -75,8 +77,8 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) []Nam
 	it.Release()
 	err := it.Error()
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 
-	return ret
+	return ret, nil
 }

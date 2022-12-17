@@ -26,8 +26,11 @@ func main() {
 	}
 	defer db.Close()
 
-	res := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	res, err := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	if err != nil {
+		log.Fatalf("ReadDatabaseNamesAndVersions error: %v\n", err)
+	}
 	for _, nv := range res {
-		log.Printf("version: %v, name: %s\n", nv.Version, nv.Name.ToString())
+		log.Printf("version: %2v, id: %v, name: %v\n", nv.Version, nv.Id, nv.Name.ToString())
 	}
 }
