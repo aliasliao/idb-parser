@@ -28,6 +28,6 @@ func main() {
 
 	res := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
 	for _, nv := range res {
-		log.Printf("version: %v, name: %s\n", nv.Version, nv.Name)
+		log.Printf("version: %v, name: %s\n", nv.Version, nv.Name.ToString())
 	}
 }

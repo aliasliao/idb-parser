@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 )
 
-type U16string = []uint16
+type U16string []uint16
 
 func CompareU16String(a, b U16string) int {
 	bytesA := make([]byte, len(a)*2)
@@ -19,4 +19,12 @@ func CompareU16String(a, b U16string) int {
 	}
 
 	return bytes.Compare(bytesA, bytesB)
+}
+
+func (s U16string) ToString() string {
+	buf := make([]byte, len(s))
+	for i, c := range s {
+		buf[i] = byte(c)
+	}
+	return string(buf)
 }

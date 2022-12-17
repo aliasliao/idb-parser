@@ -69,7 +69,7 @@ func DecodeString(slice *[]byte, value *U16string) bool {
 	strLen := bytesLen / 2
 	ret := make(U16string, strLen)
 	for i := 0; i < strLen; i++ {
-		ret[i] = binary.BigEndian.Uint16(sliceValue[i:])
+		ret[i] = binary.BigEndian.Uint16(sliceValue[i*2:])
 	}
 	*value = ret
 	*slice = sliceValue[len(sliceValue):]
