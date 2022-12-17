@@ -10,6 +10,7 @@ import (
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
 	"idb-parser/idb/leveldbCoding/varint"
+	"idb-parser/idb/metadataCoding/indexedDBDatabaseMetadata"
 )
 
 type NameAndVersion struct {
@@ -29,7 +30,7 @@ func GetVarInt(db *leveldb.DB, key []byte, foundInt *int64) bool {
 	return true
 }
 
-func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) ([]NameAndVersion, error) {
+func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]NameAndVersion, error) {
 	var ret []NameAndVersion
 
 	startKey := databaseNameKey.DatabaseNameKey{}.EncodeMinKeyForOrigin(originIdentifier)
@@ -55,7 +56,7 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) ([]Na
 		}
 
 		// Look up Version by id.
-		dbVersion := int64(DefaultVersion)
+		dbVersion := int64(indexedDBDatabaseMetadata.DefaultVersion)
 		metaDataKey := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(dbId, databaseMetaDataKey.UserVersion)
 		metaDataKeySlice := []byte(metaDataKey)
 		if !GetVarInt(db, metaDataKeySlice, &dbVersion) {
@@ -63,7 +64,7 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) ([]Na
 			continue
 		}
 
-		if dbVersion != DefaultVersion {
+		if dbVersion != indexedDBDatabaseMetadata.DefaultVersion {
 			ret = append(ret, NameAndVersion{
 				Name:    dbNameKey.DatabaseName,
 				Id:      dbId,
@@ -80,5 +81,9 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) ([]Na
 		return nil, err
 	}
 
-	return ret, nil
+	return &ret, nil
+}
+
+func ReadMetadataForDatabaseName(db *leveldb.DB, originIdentifier string, name leveldbCoding.U16string) (*indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata, error) {
+	return nil, nil
 }

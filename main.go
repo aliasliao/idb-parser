@@ -30,7 +30,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("ReadDatabaseNamesAndVersions error: %v\n", err)
 	}
-	for _, nv := range res {
+	for _, nv := range *res {
 		log.Printf("version: %2v, id: %v, name: %v\n", nv.Version, nv.Id, nv.Name.ToString())
 	}
 }
