@@ -24,6 +24,10 @@ const (
 	KeyGeneratorCurrentNumber
 )
 
+const (
+	KKeyGeneratorInitialNumber int64 = 1
+)
+
 func (k ObjectStoreMetaDataKey) Compare(other ObjectStoreMetaDataKey) int {
 	if x := leveldbCoding.CompareInts(k.ObjectStoreId, other.ObjectStoreId); x != 0 {
 		return x
@@ -58,4 +62,17 @@ func (k ObjectStoreMetaDataKey) Decode(slice *[]byte, result *ObjectStoreMetaDat
 		return false
 	}
 	return true
+}
+
+func (k ObjectStoreMetaDataKey) Encode(databaseId int64, objectStoreId int64, metaDataType MetaDataType) string {
+	prefix := keyPrefix.KeyPrefix{DatabaseId: databaseId}
+	ret := prefix.Encode()
+	ret += string(leveldbCoding.KObjectStoreMetaDataTypeByte)
+	varint.EncodeVarInt(objectStoreId, &ret)
+	ret += string(metaDataType)
+	return ret
+}
+
+func (k ObjectStoreMetaDataKey) EncodeMaxKey(databaseId int64) string {
+	return k.Encode(databaseId, keyPrefix.KMaxObjectStoreId, MetaDataType(leveldbCoding.KObjectMetaDataTypeMaximum))
 }

@@ -1,20 +1,12 @@
 package indexedDBKeyPath
 
-import "idb-parser/idb/leveldbCoding"
+import (
+	"idb-parser/idb/leveldbCoding"
+	"idb-parser/idb/leveldbCoding/mojom/idbKeyPathType"
+)
 
 type IndexedDBKeyPath struct {
-	Type   IDBKeyPathType
+	Type   idbKeyPathType.IDBKeyPathType
 	String leveldbCoding.U16string
 	Array  []leveldbCoding.U16string
 }
-
-type IDBKeyPathType int32
-
-const (
-	Null IDBKeyPathType = iota
-	String
-	Array
-
-	kMinValue IDBKeyPathType = 0
-	kMaxValue IDBKeyPathType = 1
-)

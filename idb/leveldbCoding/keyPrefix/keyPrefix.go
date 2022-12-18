@@ -20,22 +20,22 @@ const (
 	BlobEntry
 )
 const (
-	kMaxDatabaseIdSizeBits     = 3
-	kMaxObjectStoreIdSizeBits  = 3
-	kMaxIndexIdSizeBits        = 2
-	kMaxDatabaseIdSizeBytes    = 1 << kMaxDatabaseIdSizeBits    // 8
-	kMaxObjectStoreIdSizeBytes = 1 << kMaxObjectStoreIdSizeBits // 8
-	kMaxIndexIdSizeBytes       = 1 << kMaxIndexIdSizeBits       // 4
+	KMaxDatabaseIdSizeBits     = 3
+	KMaxObjectStoreIdSizeBits  = 3
+	KMaxIndexIdSizeBits        = 2
+	KMaxDatabaseIdSizeBytes    = 1 << KMaxDatabaseIdSizeBits    // 8
+	KMaxObjectStoreIdSizeBytes = 1 << KMaxObjectStoreIdSizeBits // 8
+	KMaxIndexIdSizeBytes       = 1 << KMaxIndexIdSizeBits       // 4
 
-	kMaxDatabaseIdBits    = kMaxDatabaseIdSizeBytes*8 - 1    // 63
-	kMaxObjectStoreIdBits = kMaxObjectStoreIdSizeBytes*8 - 1 // 63
-	kMaxIndexIdBits       = kMaxIndexIdSizeBytes*8 - 1       // 31
+	KMaxDatabaseIdBits    = KMaxDatabaseIdSizeBytes*8 - 1    // 63
+	KMaxObjectStoreIdBits = KMaxObjectStoreIdSizeBytes*8 - 1 // 63
+	KMaxIndexIdBits       = KMaxIndexIdSizeBytes*8 - 1       // 31
 
-	kMaxDatabaseId    int64 = (1 << kMaxDatabaseIdBits) - 1    // max signed int64_t
-	kMaxObjectStoreId int64 = (1 << kMaxObjectStoreIdBits) - 1 // max signed int64_t
-	kMaxIndexId       int64 = (1 << kMaxIndexIdBits) - 1       // max signed int32_t
+	KMaxDatabaseId    int64 = (1 << KMaxDatabaseIdBits) - 1    // max signed int64_t
+	KMaxObjectStoreId int64 = (1 << KMaxObjectStoreIdBits) - 1 // max signed int64_t
+	KMaxIndexId       int64 = (1 << KMaxIndexIdBits) - 1       // max signed int32_t
 
-	kInvalidId int64 = -1
+	KInvalidId int64 = -1
 )
 
 func (k KeyPrefix) Type() KeyPrefixType {
@@ -115,8 +115,8 @@ func (k KeyPrefix) Decode(slice *[]byte, result *KeyPrefix) bool {
 }
 
 func (k KeyPrefix) Encode() string {
-	if k.DatabaseId == kInvalidId || k.ObjectStoreId == kInvalidId || k.IndexId == kInvalidId {
-		panic("k.DatabaseId == kInvalidId || k.ObjectStoreId == kInvalidId || k.IndexId == kInvalidId")
+	if k.DatabaseId == KInvalidId || k.ObjectStoreId == KInvalidId || k.IndexId == KInvalidId {
+		panic("k.DatabaseId == KInvalidId || k.ObjectStoreId == KInvalidId || k.IndexId == KInvalidId")
 	}
 	return EncodeInternal(k.DatabaseId, k.ObjectStoreId, k.IndexId)
 }
@@ -126,15 +126,15 @@ func EncodeInternal(databaseId, objectStoreId, indexId int64) string {
 	var objectSoreIdStr string
 	var indexIdStr string
 
-	leveldbCoding.EncodeIntSafely(databaseId, kMaxDatabaseId, &databaseIdStr)
-	leveldbCoding.EncodeIntSafely(objectStoreId, kMaxObjectStoreId, &objectSoreIdStr)
-	leveldbCoding.EncodeIntSafely(indexId, kMaxIndexId, &indexIdStr)
+	leveldbCoding.EncodeIntSafely(databaseId, KMaxDatabaseId, &databaseIdStr)
+	leveldbCoding.EncodeIntSafely(objectStoreId, KMaxObjectStoreId, &objectSoreIdStr)
+	leveldbCoding.EncodeIntSafely(indexId, KMaxIndexId, &indexIdStr)
 
-	if len(databaseIdStr) > kMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > kMaxObjectStoreIdSizeBytes || len(indexIdStr) > kMaxIndexIdSizeBytes {
-		panic("len(databaseIdStr) > kMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > kMaxObjectStoreIdSizeBytes || len(indexIdStr) > kMaxIndexIdSizeBytes")
+	if len(databaseIdStr) > KMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > KMaxObjectStoreIdSizeBytes || len(indexIdStr) > KMaxIndexIdSizeBytes {
+		panic("len(databaseIdStr) > KMaxDatabaseIdSizeBytes || len(objectSoreIdStr) > KMaxObjectStoreIdSizeBytes || len(indexIdStr) > KMaxIndexIdSizeBytes")
 	}
 
-	firstByteNum := (len(databaseIdStr)-1)<<(kMaxObjectStoreIdSizeBits+kMaxIndexIdSizeBits) | (len(objectSoreIdStr)-1)<<kMaxIndexIdSizeBits | (len(indexIdStr) - 1)
+	firstByteNum := (len(databaseIdStr)-1)<<(KMaxObjectStoreIdSizeBits+KMaxIndexIdSizeBits) | (len(objectSoreIdStr)-1)<<KMaxIndexIdSizeBits | (len(indexIdStr) - 1)
 	firstByte := byte(firstByteNum)
 
 	ret := string(firstByte)
@@ -145,5 +145,5 @@ func EncodeInternal(databaseId, objectStoreId, indexId int64) string {
 }
 
 func IsValidDatabaseId(databaseId int64) bool {
-	return databaseId > 0 && databaseId < kMaxDatabaseId
+	return databaseId > 0 && databaseId < KMaxDatabaseId
 }

@@ -5,14 +5,18 @@ import (
 	"log"
 
 	"github.com/syndtr/goleveldb/leveldb"
+	"github.com/syndtr/goleveldb/leveldb/iterator"
 
 	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/compare"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
+	"idb-parser/idb/leveldbCoding/mojom/idbKeyPathType"
+	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
 	"idb-parser/idb/leveldbCoding/varint"
 	"idb-parser/idb/metadataCoding/indexedDBDatabaseMetadata"
+	"idb-parser/idb/metadataCoding/indexedDBKeyPath"
 	"idb-parser/idb/metadataCoding/indexedDBObjectStoreMetadata"
 )
 
@@ -60,12 +64,159 @@ func GetMaxObjectStoreId(db *leveldb.DB, databaseId int64) (*int64, error) {
 	}
 }
 
+func CheckObjectStoreAndMetaDataType(it iterator.Iterator, stopKey string, objectStoreId int64, metaDataType objectStoreMetaDataKey.MetaDataType) bool {
+	if !it.Valid() || compare.CompareKeys(it.Key(), []byte(stopKey)) >= 0 {
+		return false
+	}
+	slice := it.Key()
+	var metaDataKey objectStoreMetaDataKey.ObjectStoreMetaDataKey
+	if !(objectStoreMetaDataKey.ObjectStoreMetaDataKey{}).Decode(&slice, &metaDataKey) || len(slice) != 0 {
+		panic("fail to decode objectStoreMetaDataKey")
+	}
+	if metaDataKey.ObjectStoreId != objectStoreId || metaDataKey.MetaDataType != metaDataType {
+		return false
+	}
+	return true
+}
+
 func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata, error) {
 	if !keyPrefix.IsValidDatabaseId(databaseId) {
 		return nil, fmt.Errorf("invalid databaseId")
 	}
-	// TODO
-	return nil, nil
+
+	startKey := objectStoreMetaDataKey.ObjectStoreMetaDataKey{}.Encode(databaseId, 1, objectStoreMetaDataKey.Name)
+	stopKey := objectStoreMetaDataKey.ObjectStoreMetaDataKey{}.EncodeMaxKey(databaseId)
+
+	var objectStores map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata
+
+	it := db.NewIterator(nil, nil)
+	ok := it.Seek([]byte(startKey))
+	for ok && it.Valid() && compare.CompareKeys(it.Key(), []byte(stopKey)) < 0 {
+		var metaDataKey objectStoreMetaDataKey.ObjectStoreMetaDataKey
+		{
+			slice := it.Key()
+			if !(objectStoreMetaDataKey.ObjectStoreMetaDataKey{}).Decode(&slice, &metaDataKey) || len(slice) != 0 {
+				panic("fail to decode metaDataKey")
+			}
+			if metaDataKey.MetaDataType != objectStoreMetaDataKey.Name {
+				ok = it.Next()
+				continue
+			}
+		}
+
+		objectStoreId := metaDataKey.ObjectStoreId
+		var objectStoreName leveldbCoding.U16string
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeString(&slice, &objectStoreName) || len(slice) != 0 {
+				panic("fail to decode objectStoreName")
+			}
+		}
+
+		ok = it.Next()
+		if !ok || !CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.KeyPath) {
+			break
+		}
+		var keyPath indexedDBKeyPath.IndexedDBKeyPath
+		{
+			slice := it.Value()
+			if !DecodeIDBKeyPath(&slice, &keyPath) || len(slice) != 0 {
+				panic("fail to decode IDBKeyPath")
+			}
+		}
+
+		ok = it.Next()
+		if !ok || !CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.AutoIncrement) {
+			break
+		}
+		var autoIncrement bool
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeBool(&slice, &autoIncrement) || len(slice) != 0 {
+				panic("fail to decode autoIncrement")
+			}
+		}
+
+		ok = it.Next()
+		if !ok || !CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.Evictable) {
+			break
+		}
+
+		ok = it.Next()
+		if !ok || !CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.LastVersion) {
+			break
+		}
+
+		ok = it.Next()
+		if !ok || !CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.MaxIndexId) {
+			break
+		}
+		var maxIndexId int64
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeInt(&slice, &maxIndexId) || len(slice) != 0 {
+				panic("fail to decode maxIndexId")
+			}
+		}
+
+		ok = it.Next()
+		if !ok {
+			break
+		}
+		if CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.HasKeyPath) {
+			var hasKeyPath bool
+			{
+				slice := it.Value()
+				if !leveldbCoding.DecodeBool(&slice, &hasKeyPath) {
+					panic("fail to decode hasKeyPath")
+				}
+			}
+			if !hasKeyPath && keyPath.Type == idbKeyPathType.String && len(keyPath.String) != 0 {
+				break
+			}
+			if !hasKeyPath {
+				keyPath = indexedDBKeyPath.IndexedDBKeyPath{Type: idbKeyPathType.Null}
+			}
+			if ok = it.Next(); !ok {
+				break
+			}
+		}
+
+		var keyGeneratorCurrentNumber int64 = -1
+		if CheckObjectStoreAndMetaDataType(it, stopKey, objectStoreId, objectStoreMetaDataKey.KeyGeneratorCurrentNumber) {
+			slice := it.Value()
+			if !leveldbCoding.DecodeInt(&slice, &keyGeneratorCurrentNumber) || len(slice) != 0 {
+				panic("fail to decode keyGeneratorCurrentNumber")
+			}
+			if keyGeneratorCurrentNumber < objectStoreMetaDataKey.KKeyGeneratorInitialNumber {
+				panic("keyGeneratorCurrentNumber < objectStoreMetaDataKey.KKeyGeneratorInitialNumber")
+			}
+			if ok = it.Next(); !ok {
+				break
+			}
+		}
+
+		metadata := indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata{
+			Name:          objectStoreName,
+			Id:            objectStoreId,
+			KeyPath:       keyPath,
+			AuthIncrement: autoIncrement,
+			MaxIndexId:    maxIndexId,
+			Indexes:       nil,
+		}
+		if !ReadIndexes(db, databaseId, objectStoreId, &metadata.Indexes) {
+			break
+		}
+		objectStores[objectStoreId] = metadata
+	}
+
+	it.Release()
+	err := it.Error()
+	if err != nil {
+		return nil, err
+	}
+
+	return &objectStores, nil
 }
 
 func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]NameAndVersion, error) {
