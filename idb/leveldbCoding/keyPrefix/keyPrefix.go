@@ -143,3 +143,7 @@ func EncodeInternal(databaseId, objectStoreId, indexId int64) string {
 	ret += indexIdStr
 	return ret
 }
+
+func IsValidDatabaseId(databaseId int64) bool {
+	return databaseId > 0 && databaseId < kMaxDatabaseId
+}

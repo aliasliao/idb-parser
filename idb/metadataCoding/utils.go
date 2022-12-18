@@ -10,6 +10,7 @@ import (
 	"idb-parser/idb/leveldbCoding/compare"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
+	"idb-parser/idb/leveldbCoding/keyPrefix"
 	"idb-parser/idb/leveldbCoding/varint"
 	"idb-parser/idb/metadataCoding/indexedDBDatabaseMetadata"
 	"idb-parser/idb/metadataCoding/indexedDBObjectStoreMetadata"
@@ -48,10 +49,22 @@ func GetInt(db *leveldb.DB, key *string) (*int64, error) {
 }
 
 func GetMaxObjectStoreId(db *leveldb.DB, databaseId int64) (*int64, error) {
-	return nil, nil
+	key := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(databaseId, databaseMetaDataKey.MaxObjectStoreId)
+	if maxObjectStoreId, err := GetInt(db, &key); err != nil {
+		return nil, fmt.Errorf("fail to get max object store id: %w", err)
+	} else {
+		if *maxObjectStoreId < 0 {
+			return nil, fmt.Errorf("maxObjectStoreId < 0")
+		}
+		return maxObjectStoreId, nil
+	}
 }
 
 func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata, error) {
+	if !keyPrefix.IsValidDatabaseId(databaseId) {
+		return nil, fmt.Errorf("invalid databaseId")
+	}
+	// TODO
 	return nil, nil
 }
 
