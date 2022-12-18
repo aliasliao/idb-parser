@@ -1,6 +1,7 @@
 package metadataCoding
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/syndtr/goleveldb/leveldb"
@@ -11,6 +12,7 @@ import (
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
 	"idb-parser/idb/leveldbCoding/varint"
 	"idb-parser/idb/metadataCoding/indexedDBDatabaseMetadata"
+	"idb-parser/idb/metadataCoding/indexedDBObjectStoreMetadata"
 )
 
 type NameAndVersion struct {
@@ -19,15 +21,38 @@ type NameAndVersion struct {
 	Version int64
 }
 
-func GetVarInt(db *leveldb.DB, key []byte, foundInt *int64) bool {
-	result, err := db.Get(key, nil)
+func GetVarInt(db *leveldb.DB, key *string) (*int64, error) {
+	slice := []byte(*key)
+	value, err := db.Get(slice, nil)
 	if err != nil {
-		return false
+		return nil, err
 	}
-	if !varint.DecodeVarInt(&result, foundInt) || len(result) != 0 {
-		return false
+	var foundInt int64 = 0
+	if !varint.DecodeVarInt(&value, &foundInt) || len(value) != 0 {
+		return nil, fmt.Errorf("fail to DecodeVarInt")
 	}
-	return true
+	return &foundInt, nil
+}
+
+func GetInt(db *leveldb.DB, key *string) (*int64, error) {
+	slice := []byte(*key)
+	value, err := db.Get(slice, nil)
+	if err != nil {
+		return nil, err
+	}
+	var foundInt int64 = 0
+	if !leveldbCoding.DecodeInt(&value, &foundInt) || len(value) != 0 {
+		return nil, fmt.Errorf("fail to DecodeInt")
+	}
+	return &foundInt, nil
+}
+
+func GetMaxObjectStoreId(db *leveldb.DB, databaseId int64) (*int64, error) {
+	return nil, nil
+}
+
+func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata, error) {
+	return nil, nil
 }
 
 func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]NameAndVersion, error) {
@@ -58,10 +83,11 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]N
 		// Look up Version by id.
 		dbVersion := int64(indexedDBDatabaseMetadata.DefaultVersion)
 		metaDataKey := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(dbId, databaseMetaDataKey.UserVersion)
-		metaDataKeySlice := []byte(metaDataKey)
-		if !GetVarInt(db, metaDataKeySlice, &dbVersion) {
-			log.Println("error getting databaseVersion")
+		if foundInt, err := GetVarInt(db, &metaDataKey); err != nil {
+			log.Printf("fail to get databaseVersion: %v\n", err)
 			continue
+		} else {
+			dbVersion = *foundInt
 		}
 
 		if dbVersion != indexedDBDatabaseMetadata.DefaultVersion {
@@ -85,5 +111,42 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]N
 }
 
 func ReadMetadataForDatabaseName(db *leveldb.DB, originIdentifier string, name leveldbCoding.U16string) (*indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata, error) {
-	return nil, nil
+	metadata := indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata{
+		Name:    name,
+		Version: indexedDBDatabaseMetadata.DefaultVersion,
+	}
+	dbNameKey := databaseNameKey.DatabaseNameKey{}.Encode(originIdentifier, name)
+	if id, err := GetInt(db, &dbNameKey); err != nil {
+		return nil, fmt.Errorf("fail to get db id: %w", err)
+	} else {
+		metadata.Id = *id
+	}
+
+	versionKey := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(metadata.Id, databaseMetaDataKey.UserVersion)
+	if version, err := GetVarInt(db, &versionKey); err != nil {
+		return nil, fmt.Errorf("fail to get db version: %w", err)
+	} else {
+		metadata.Version = *version
+	}
+
+	if maxObjectStoreId, err := GetMaxObjectStoreId(db, metadata.Id); err != nil {
+		return nil, fmt.Errorf("fail to get maxObjectStoreId: %w", err)
+	} else {
+		metadata.MaxObjectStoreId = *maxObjectStoreId
+	}
+
+	blobNumberKey := databaseMetaDataKey.DatabaseMetaDataKey{}.Encode(metadata.Id, databaseMetaDataKey.BlobKeyGeneratorCurrentNumber)
+	if currentBlobNumber, err := GetVarInt(db, &blobNumberKey); err != nil {
+		return nil, fmt.Errorf("fail to get blob current number: %w", err)
+	} else if !databaseMetaDataKey.IsValidBlobNumber(*currentBlobNumber) {
+		return nil, fmt.Errorf("blob number not valid")
+	}
+
+	if objectStores, err := ReadObjectStores(db, metadata.Id); err != nil {
+		return nil, fmt.Errorf("fail to read object stores: %w", err)
+	} else {
+		metadata.ObjectStores = *objectStores
+	}
+
+	return &metadata, nil
 }

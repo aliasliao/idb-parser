@@ -17,6 +17,12 @@ const (
 	MaxSimpleMetadataType
 )
 
+const (
+	KAllBlobsNumber                   int64 = 1
+	KBlobNumberGeneratorInitialNumber int64 = 2
+	KInvalidBlobNumber                int64 = -1
+)
+
 func (k DatabaseMetaDataKey) Encode(databaseId int64, metaDataType MetaDataType) string {
 	prefix := keyPrefix.KeyPrefix{
 		DatabaseId:    databaseId,
@@ -26,4 +32,8 @@ func (k DatabaseMetaDataKey) Encode(databaseId int64, metaDataType MetaDataType)
 	ret := prefix.Encode()
 	ret += string(metaDataType)
 	return ret
+}
+
+func IsValidBlobNumber(blobNumber int64) bool {
+	return blobNumber >= KBlobNumberGeneratorInitialNumber
 }
