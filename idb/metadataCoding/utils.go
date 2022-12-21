@@ -105,6 +105,7 @@ func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObj
 		}
 
 		objectStoreId := metaDataKey.ObjectStoreId
+
 		var objectStoreName leveldbCoding.U16string
 		{
 			slice := it.Value()
