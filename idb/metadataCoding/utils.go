@@ -122,7 +122,7 @@ func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObj
 		var keyPath indexedDBKeyPath.IndexedDBKeyPath
 		{
 			slice := it.Value()
-			if !DecodeIDBKeyPath(&slice, &keyPath) || len(slice) != 0 {
+			if !leveldbCoding.DecodeIDBKeyPath(&slice, &keyPath) || len(slice) != 0 {
 				panic("fail to decode IDBKeyPath")
 			}
 		}

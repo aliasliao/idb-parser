@@ -7,7 +7,9 @@ import (
 	"math"
 
 	"idb-parser/idb/common"
+	"idb-parser/idb/common/indexedDBKeyPath"
 	"idb-parser/idb/common/mojom"
+	"idb-parser/idb/common/mojom/idbKeyPathType"
 	"idb-parser/idb/leveldbCoding/varint"
 )
 
@@ -160,6 +162,81 @@ func DecodeBool(slice *[]byte, value *bool) bool {
 	*value = sliceValue[0] != 0
 	*slice = sliceValue[1:]
 	return true
+}
+
+func DecodeIDBKeyPath(_slice *[]byte, value *indexedDBKeyPath.IndexedDBKeyPath) bool {
+	slice := *_slice
+	defer func() { *_slice = slice }()
+
+	if len(slice) < 3 || slice[0] != KIndexedDBKeyPathTypeCodedByte1 || slice[1] != KIndexedDBKeyPathTypeCodedByte2 {
+		var s common.U16string
+		if !DecodeString(&slice, &s) {
+			return false
+		}
+		*value = indexedDBKeyPath.IndexedDBKeyPath{
+			Type:   idbKeyPathType.String,
+			String: s,
+			Array:  nil,
+		}
+		return true
+	}
+
+	slice = slice[2:]
+	if len(slice) == 0 {
+		panic("len(slice) == 0")
+	}
+	kpType := idbKeyPathType.IDBKeyPathType(slice[0])
+	slice = slice[1:]
+
+	switch kpType {
+	case idbKeyPathType.Null:
+		if len(slice) != 0 {
+			panic("len(slice) != 0")
+		}
+		*value = indexedDBKeyPath.IndexedDBKeyPath{
+			Type:   idbKeyPathType.Null,
+			String: nil,
+			Array:  nil,
+		}
+		return true
+	case idbKeyPathType.String:
+		var s common.U16string
+		if !DecodeStringWithLength(&slice, &s) {
+			return false
+		}
+		if len(slice) != 0 {
+			panic("len(slice) != 0")
+		}
+		*value = indexedDBKeyPath.IndexedDBKeyPath{
+			Type:   idbKeyPathType.String,
+			String: s,
+			Array:  nil,
+		}
+		return true
+	case idbKeyPathType.Array:
+		var count int64
+		if !varint.DecodeVarInt(&slice, &count) || count < 0 {
+			return false
+		}
+		arr := make([]common.U16string, count)
+		for i := 0; i < int(count); i += 1 {
+			var s common.U16string
+			if !DecodeStringWithLength(&slice, &s) {
+				return false
+			}
+			arr[i] = s
+		}
+		if len(slice) != 0 {
+			panic("len(slice) != 0")
+		}
+		*value = indexedDBKeyPath.IndexedDBKeyPath{
+			Type:   idbKeyPathType.Array,
+			String: nil,
+			Array:  arr,
+		}
+		return true
+	}
+	return false
 }
 
 func CompareInts(a, b int64) int {
