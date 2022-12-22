@@ -9,6 +9,7 @@ import (
 
 	"idb-parser/idb/common"
 	"idb-parser/idb/common/indexedDBDatabaseMetadata"
+	"idb-parser/idb/common/indexedDBIndexMetadata"
 	"idb-parser/idb/common/indexedDBKeyPath"
 	"idb-parser/idb/common/indexedDBObjectStoreMetadata"
 	"idb-parser/idb/common/mojom/idbKeyPathType"
@@ -78,6 +79,11 @@ func CheckObjectStoreAndMetaDataType(it iterator.Iterator, stopKey string, objec
 		return false
 	}
 	return true
+}
+
+func ReadIndexes(db *leveldb.DB, databaseId, objectStoreId int64) (*map[int64]indexedDBIndexMetadata.IndexedDBIndexMetadata, error) {
+	// TODO
+	return nil, nil
 }
 
 func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata, error) {
@@ -206,8 +212,11 @@ func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObj
 			MaxIndexId:    maxIndexId,
 			Indexes:       nil,
 		}
-		if !ReadIndexes(db, databaseId, objectStoreId, &metadata.Indexes) {
+		if indexes, err := ReadIndexes(db, databaseId, objectStoreId); err != nil {
+			log.Printf("fail to ReadIndexes, err=%v", err)
 			break
+		} else {
+			metadata.Indexes = *indexes
 		}
 		objectStores[objectStoreId] = metadata
 	}
