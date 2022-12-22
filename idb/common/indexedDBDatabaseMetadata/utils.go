@@ -1,12 +1,12 @@
 package indexedDBDatabaseMetadata
 
 import (
-	"idb-parser/idb/leveldbCoding"
-	"idb-parser/idb/metadataCoding/indexedDBObjectStoreMetadata"
+	"idb-parser/idb/common"
+	"idb-parser/idb/common/indexedDBObjectStoreMetadata"
 )
 
 type IndexedDBDatabaseMetadata struct {
-	Name             leveldbCoding.U16string
+	Name             common.U16string
 	Id               int64
 	Version          int64
 	MaxObjectStoreId int64

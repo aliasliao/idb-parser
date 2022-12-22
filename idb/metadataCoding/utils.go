@@ -7,21 +7,22 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 
+	"idb-parser/idb/common"
+	"idb-parser/idb/common/indexedDBDatabaseMetadata"
+	"idb-parser/idb/common/indexedDBKeyPath"
+	"idb-parser/idb/common/indexedDBObjectStoreMetadata"
+	"idb-parser/idb/common/mojom/idbKeyPathType"
 	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/compare"
 	"idb-parser/idb/leveldbCoding/databaseMetaDataKey"
 	"idb-parser/idb/leveldbCoding/databaseNameKey"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
-	"idb-parser/idb/leveldbCoding/mojom/idbKeyPathType"
 	"idb-parser/idb/leveldbCoding/objectStoreMetaDataKey"
 	"idb-parser/idb/leveldbCoding/varint"
-	"idb-parser/idb/metadataCoding/indexedDBDatabaseMetadata"
-	"idb-parser/idb/metadataCoding/indexedDBKeyPath"
-	"idb-parser/idb/metadataCoding/indexedDBObjectStoreMetadata"
 )
 
 type NameAndVersion struct {
-	Name    leveldbCoding.U16string
+	Name    common.U16string
 	Id      int64
 	Version int64
 }
@@ -106,7 +107,7 @@ func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObj
 
 		objectStoreId := metaDataKey.ObjectStoreId
 
-		var objectStoreName leveldbCoding.U16string
+		var objectStoreName common.U16string
 		{
 			slice := it.Value()
 			if !leveldbCoding.DecodeString(&slice, &objectStoreName) || len(slice) != 0 {
@@ -275,7 +276,7 @@ func ReadDatabaseNamesAndVersions(db *leveldb.DB, originIdentifier string) (*[]N
 	return &ret, nil
 }
 
-func ReadMetadataForDatabaseName(db *leveldb.DB, originIdentifier string, name leveldbCoding.U16string) (*indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata, error) {
+func ReadMetadataForDatabaseName(db *leveldb.DB, originIdentifier string, name common.U16string) (*indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata, error) {
 	metadata := indexedDBDatabaseMetadata.IndexedDBDatabaseMetadata{
 		Name:    name,
 		Version: indexedDBDatabaseMetadata.DefaultVersion,

@@ -1,16 +1,17 @@
 package objectStoreNamesKey
 
 import (
+	"idb-parser/idb/common"
 	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
 )
 
 type ObjectStoreNamesKey struct {
-	ObjectStoreName leveldbCoding.U16string
+	ObjectStoreName common.U16string
 }
 
 func (k ObjectStoreNamesKey) Compare(other ObjectStoreNamesKey) int {
-	return leveldbCoding.CompareU16String(k.ObjectStoreName, other.ObjectStoreName)
+	return common.CompareU16String(k.ObjectStoreName, other.ObjectStoreName)
 }
 
 func (k ObjectStoreNamesKey) Decode(slice *[]byte, result *ObjectStoreNamesKey) bool {

@@ -1,24 +1,25 @@
 package databaseNameKey
 
 import (
+	"idb-parser/idb/common"
 	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
 )
 
 type DatabaseNameKey struct {
-	Origin       leveldbCoding.U16string
-	DatabaseName leveldbCoding.U16string
+	Origin       common.U16string
+	DatabaseName common.U16string
 }
 
 func (k DatabaseNameKey) EncodeMinKeyForOrigin(originIdentifier string) string {
-	return k.Encode(originIdentifier, leveldbCoding.U16string{})
+	return k.Encode(originIdentifier, common.U16string{})
 }
 
 func (k DatabaseNameKey) EncodeStopKeyForOrigin(originIdentifier string) string {
 	return k.EncodeMinKeyForOrigin(originIdentifier + "\x01")
 }
 
-func (k DatabaseNameKey) Encode(originIdentifier string, databaseName leveldbCoding.U16string) string {
+func (k DatabaseNameKey) Encode(originIdentifier string, databaseName common.U16string) string {
 	ret := string([]byte{0, 0, 0, 0, leveldbCoding.KDatabaseNameTypeByte})
 	leveldbCoding.EncodeStringWithLength(leveldbCoding.ASCIIToUTF16(originIdentifier), &ret)
 	leveldbCoding.EncodeStringWithLength(databaseName, &ret)
@@ -52,8 +53,8 @@ func (k DatabaseNameKey) Decode(slice *[]byte, result *DatabaseNameKey) bool {
 }
 
 func (k DatabaseNameKey) Compare(other DatabaseNameKey) int {
-	if x := leveldbCoding.CompareU16String(k.Origin, other.Origin); x != 0 {
+	if x := common.CompareU16String(k.Origin, other.Origin); x != 0 {
 		return x
 	}
-	return leveldbCoding.CompareU16String(k.DatabaseName, other.DatabaseName)
+	return common.CompareU16String(k.DatabaseName, other.DatabaseName)
 }

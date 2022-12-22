@@ -1,13 +1,13 @@
 package indexedDBObjectStoreMetadata
 
 import (
-	"idb-parser/idb/leveldbCoding"
-	"idb-parser/idb/metadataCoding/indexedDBIndexMetadata"
-	"idb-parser/idb/metadataCoding/indexedDBKeyPath"
+	"idb-parser/idb/common"
+	"idb-parser/idb/common/indexedDBIndexMetadata"
+	"idb-parser/idb/common/indexedDBKeyPath"
 )
 
 type IndexedDBObjectStoreMetadata struct {
-	Name          leveldbCoding.U16string
+	Name          common.U16string
 	Id            int64
 	KeyPath       indexedDBKeyPath.IndexedDBKeyPath
 	AuthIncrement bool

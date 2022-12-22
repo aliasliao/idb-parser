@@ -1,6 +1,7 @@
 package indexNamesKey
 
 import (
+	"idb-parser/idb/common"
 	"idb-parser/idb/leveldbCoding"
 	"idb-parser/idb/leveldbCoding/keyPrefix"
 	"idb-parser/idb/leveldbCoding/varint"
@@ -8,7 +9,7 @@ import (
 
 type IndexNamesKey struct {
 	ObjectStoreId int64
-	IndexName     leveldbCoding.U16string
+	IndexName     common.U16string
 }
 
 func (k IndexNamesKey) Compare(other IndexNamesKey) int {
@@ -18,7 +19,7 @@ func (k IndexNamesKey) Compare(other IndexNamesKey) int {
 	if x := leveldbCoding.CompareInts(k.ObjectStoreId, other.ObjectStoreId); x != 0 {
 		return x
 	}
-	return leveldbCoding.CompareU16String(k.IndexName, other.IndexName)
+	return common.CompareU16String(k.IndexName, other.IndexName)
 }
 
 func (k IndexNamesKey) Decode(slice *[]byte, result *IndexNamesKey) bool {

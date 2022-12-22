@@ -6,25 +6,26 @@ import (
 	"fmt"
 	"math"
 
-	"idb-parser/idb/leveldbCoding/mojom"
+	"idb-parser/idb/common"
+	"idb-parser/idb/common/mojom"
 	"idb-parser/idb/leveldbCoding/varint"
 )
 
-func ASCIIToUTF16(s string) U16string {
+func ASCIIToUTF16(s string) common.U16string {
 	list := []byte(s)
-	ret := make(U16string, len(list))
+	ret := make(common.U16string, len(list))
 	for i, b := range list {
 		ret[i] = uint16(b)
 	}
 	return ret
 }
 
-func EncodeStringWithLength(value U16string, into *string) {
+func EncodeStringWithLength(value common.U16string, into *string) {
 	varint.EncodeVarInt(int64(len(value)), into)
 	EncodeString(value, into)
 }
 
-func DecodeStringWithLength(slice *[]byte, value *U16string) bool {
+func DecodeStringWithLength(slice *[]byte, value *common.U16string) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
 		return false
@@ -45,7 +46,7 @@ func DecodeStringWithLength(slice *[]byte, value *U16string) bool {
 	return true
 }
 
-func EncodeString(from U16string, into *string) {
+func EncodeString(from common.U16string, into *string) {
 	if len(from) == 0 {
 		return
 	}
@@ -56,18 +57,18 @@ func EncodeString(from U16string, into *string) {
 	*into += string(buf)
 }
 
-func DecodeString(slice *[]byte, value *U16string) bool {
+func DecodeString(slice *[]byte, value *common.U16string) bool {
 	sliceValue := *slice
 	bytesLen := len(sliceValue)
 	if bytesLen == 0 {
-		*value = U16string{}
+		*value = common.U16string{}
 		return true
 	}
 	if bytesLen%2 != 0 {
 		return false // DCHECK
 	}
 	strLen := bytesLen / 2
-	ret := make(U16string, strLen)
+	ret := make(common.U16string, strLen)
 	for i := 0; i < strLen; i++ {
 		ret[i] = binary.BigEndian.Uint16(sliceValue[i*2:])
 	}
@@ -198,14 +199,14 @@ func CompareEncodedBinary(sliceA, sliceB *[]byte, ok *bool) int {
 }
 
 func CompareEncodedStringWithLength(sliceA, sliceB *[]byte, ok *bool) int {
-	var strA U16string
-	var strB U16string
+	var strA common.U16string
+	var strB common.U16string
 	if !DecodeStringWithLength(sliceA, &strA) || !DecodeStringWithLength(sliceB, &strB) {
 		*ok = false
 		return 0
 	}
 	*ok = true
-	return CompareU16String(strA, strB)
+	return common.CompareU16String(strA, strB)
 }
 
 func KeyTypeByteToKeyType(t byte) mojom.IDBKeyType {

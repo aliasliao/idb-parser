@@ -1,12 +1,12 @@
 package indexedDBIndexMetadata
 
 import (
-	"idb-parser/idb/leveldbCoding"
-	"idb-parser/idb/metadataCoding/indexedDBKeyPath"
+	"idb-parser/idb/common"
+	"idb-parser/idb/common/indexedDBKeyPath"
 )
 
 type IndexedDBIndexMetadata struct {
-	Name       leveldbCoding.U16string
+	Name       common.U16string
 	Id         int64
 	KeyPath    indexedDBKeyPath.IndexedDBKeyPath
 	Unique     bool
