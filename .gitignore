@@ -26,3 +26,4 @@ go.work
 data
 *.zip
 .idea
+build

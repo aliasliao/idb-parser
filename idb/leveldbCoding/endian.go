@@ -8,7 +8,7 @@ import (
 
 var nativeEndian binary.ByteOrder
 
-func init() {
+func InitEndian() {
 	buf := [2]byte{}
 	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xABCD)
 

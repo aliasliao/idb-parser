@@ -1,7 +1,10 @@
 package main
 
 import (
+	"flag"
 	"log"
+	"path/filepath"
+	"strings"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -11,9 +14,20 @@ import (
 	"idb-parser/idb/metadataCoding"
 )
 
+func getOriginIdentifier(dbPath string) string {
+	dirName := filepath.Base(dbPath)
+	origin := strings.TrimSuffix(dirName, ".indexeddb.leveldb")
+	return origin + "@1"
+}
+
+const defaultDbPath = "./data/IndexedDB/https_web.haiserve.com_0.indexeddb.leveldb"
+
 func main() {
-	dbPath := "./data/IndexedDB/https_web.haiserve.com_0.indexeddb.leveldb"
-	originIdentifier := "https_web.haiserve.com_0@1"
+	var dbPath = defaultDbPath
+	flag.StringVar(&dbPath, "dbPath", defaultDbPath, `leveldb dir path ending with ".indexeddb.leveldb"`)
+	flag.Parse()
+
+	originIdentifier := getOriginIdentifier(dbPath)
 
 	options := opt.Options{
 		Comparer:       compare.Comparator{},
@@ -23,7 +37,7 @@ func main() {
 	}
 	db, err := leveldb.OpenFile(dbPath, &options)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatalln("fail to open file:", err)
 	}
 	defer func(db *leveldb.DB) {
 		err := db.Close()
@@ -33,7 +47,7 @@ func main() {
 	}(db)
 
 	namesAndVersions, err := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
-	if err != nil {
+	if err != nil || len(*namesAndVersions) == 0 {
 		log.Fatalf("ReadDatabaseNamesAndVersions error: %v\n", err)
 	}
 	for _, nv := range *namesAndVersions {
