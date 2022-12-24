@@ -22,8 +22,8 @@ const (
 )
 
 func (k IndexMetaDataKey) Compare(other IndexMetaDataKey) int {
-	if k.ObjectStoreId != 0 || k.IndexId != 0 {
-		panic("k.ObjectStoreId != 0 || k.IndexId != 0")
+	if k.ObjectStoreId < 0 || k.IndexId < 0 {
+		panic("k.ObjectStoreId < 0 || k.IndexId < 0")
 	}
 	if x := leveldbCoding.CompareInts(k.ObjectStoreId, other.ObjectStoreId); x != 0 {
 		return x
@@ -39,7 +39,7 @@ func (k IndexMetaDataKey) Decode(slice *[]byte, result *IndexMetaDataKey) bool {
 	if !(keyPrefix.KeyPrefix{}).Decode(slice, &prefix) {
 		return false
 	}
-	if prefix.DatabaseId == 0 || prefix.ObjectStoreId != 0 && prefix.IndexId != 0 {
+	if prefix.DatabaseId == 0 || prefix.ObjectStoreId != 0 || prefix.IndexId != 0 {
 		panic("prefix.DatabaseId == 0 || prefix.ObjectStoreId != 0 && prefix.IndexId != 0")
 	}
 	var typeByte byte = 0

@@ -26,11 +26,36 @@ func main() {
 	}
 	defer db.Close()
 
-	res, err := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
+	namesAndVersions, err := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
 	if err != nil {
 		log.Fatalf("ReadDatabaseNamesAndVersions error: %v\n", err)
 	}
-	for _, nv := range *res {
-		log.Printf("version: %2v, id: %v, name: %v\n", nv.Version, nv.Id, nv.Name.ToString())
+	for _, nv := range *namesAndVersions {
+		log.Printf("id: %v, name: %v, version: %2v\n", nv.Id, nv.Name.ToString(), nv.Version)
+
+		if metadata, err := metadataCoding.ReadMetadataForDatabaseName(db, originIdentifier, nv.Name); err != nil {
+			log.Fatalf("ReadMetadataForDatabaseName error: %v\n", err)
+		} else {
+			log.Println()
+			log.Printf("objectStores length: %v, maxObjectStoreId: %v\n", len(metadata.ObjectStores), metadata.MaxObjectStoreId)
+			for objectStoreId, objectStoreMetadata := range metadata.ObjectStores {
+				log.Println()
+				log.Printf("  objectStoreId: %v\n", objectStoreId)
+				log.Printf("  name: %s\n", objectStoreMetadata.Name.ToString())
+				log.Printf("  keyPath: type=%v, string=%s, array=%v\n", objectStoreMetadata.KeyPath.Type, objectStoreMetadata.KeyPath.String.ToString(), objectStoreMetadata.KeyPath.Array)
+				log.Println()
+				log.Printf("  indexes length: %v, maxIndexId: %v\n", len(objectStoreMetadata.Indexes), objectStoreMetadata.MaxIndexId)
+				for indexId, indexMetadata := range objectStoreMetadata.Indexes {
+					log.Printf("    indexId: %v\n", indexId)
+					log.Printf("    name: %v\n", indexId)
+					log.Printf("    keyPath: type=%v, string=%s, array=%v\n", indexMetadata.KeyPath.Type, indexMetadata.KeyPath.String.ToString(), indexMetadata.KeyPath.Array)
+					log.Printf("    unique: %v\n", indexMetadata.Unique)
+					log.Printf("    multiEntry: %v\n", indexMetadata.MultiEntry)
+					log.Println()
+				}
+				log.Println()
+			}
+		}
+		log.Println()
 	}
 }

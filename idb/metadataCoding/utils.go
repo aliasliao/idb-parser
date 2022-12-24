@@ -105,7 +105,7 @@ func ReadIndexes(db *leveldb.DB, databaseId, objectStoreId int64) (*map[int64]in
 	startKey := indexMetaDataKey.IndexMetaDataKey{}.Encode(databaseId, objectStoreId, 0, 0)
 	stopKey := indexMetaDataKey.IndexMetaDataKey{}.Encode(databaseId, objectStoreId+1, 0, 0)
 
-	var indexes map[int64]indexedDBIndexMetadata.IndexedDBIndexMetadata
+	indexes := map[int64]indexedDBIndexMetadata.IndexedDBIndexMetadata{}
 
 	it := db.NewIterator(nil, nil)
 	ok := it.Seek([]byte(startKey))
@@ -195,7 +195,7 @@ func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObj
 	startKey := objectStoreMetaDataKey.ObjectStoreMetaDataKey{}.Encode(databaseId, 1, objectStoreMetaDataKey.Name)
 	stopKey := objectStoreMetaDataKey.ObjectStoreMetaDataKey{}.EncodeMaxKey(databaseId)
 
-	var objectStores map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata
+	objectStores := map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata{}
 
 	it := db.NewIterator(nil, nil)
 	ok := it.Seek([]byte(startKey))
