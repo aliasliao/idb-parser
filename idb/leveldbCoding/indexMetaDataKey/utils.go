@@ -60,3 +60,17 @@ func (k IndexMetaDataKey) Decode(slice *[]byte, result *IndexMetaDataKey) bool {
 	}
 	return true
 }
+
+func (k IndexMetaDataKey) Encode(databaseId, objectStoreId, indexId int64, metaDataType MetaDataType) string {
+	prefix := keyPrefix.KeyPrefix{
+		DatabaseId:    databaseId,
+		ObjectStoreId: 0,
+		IndexId:       0,
+	}
+	ret := prefix.Encode()
+	ret += string(leveldbCoding.KIndexMetaDataTypeByte)
+	varint.EncodeVarInt(objectStoreId, &ret)
+	varint.EncodeVarInt(indexId, &ret)
+	leveldbCoding.EncodeByte(byte(metaDataType), &ret)
+	return ret
+}

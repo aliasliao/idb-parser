@@ -7,6 +7,8 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/iterator"
 
+	"idb-parser/idb/leveldbCoding/indexMetaDataKey"
+
 	"idb-parser/idb/common"
 	"idb-parser/idb/common/indexedDBDatabaseMetadata"
 	"idb-parser/idb/common/indexedDBIndexMetadata"
@@ -81,9 +83,108 @@ func CheckObjectStoreAndMetaDataType(it iterator.Iterator, stopKey string, objec
 	return true
 }
 
+func CheckIndexAndMetaDataKey(it iterator.Iterator, stopKey string, indexId int64, metaDataType indexMetaDataKey.MetaDataType) bool {
+	if !it.Valid() || compare.CompareKeys(it.Key(), []byte(stopKey)) >= 0 {
+		return false
+	}
+	slice := it.Key()
+	var metaDataKey indexMetaDataKey.IndexMetaDataKey
+	if !(indexMetaDataKey.IndexMetaDataKey{}).Decode(&slice, &metaDataKey) {
+		panic("fail to decode indexMetaDataKey")
+	}
+	if metaDataKey.IndexId != indexId || metaDataKey.MetaDataType != metaDataType {
+		return false
+	}
+	return true
+}
+
 func ReadIndexes(db *leveldb.DB, databaseId, objectStoreId int64) (*map[int64]indexedDBIndexMetadata.IndexedDBIndexMetadata, error) {
-	// TODO
-	return nil, nil
+	if !keyPrefix.ValidIds(databaseId, objectStoreId) {
+		panic("!keyPrefix.ValidIds(databaseId, objectStoreId)")
+	}
+	startKey := indexMetaDataKey.IndexMetaDataKey{}.Encode(databaseId, objectStoreId, 0, 0)
+	stopKey := indexMetaDataKey.IndexMetaDataKey{}.Encode(databaseId, objectStoreId+1, 0, 0)
+
+	var indexes map[int64]indexedDBIndexMetadata.IndexedDBIndexMetadata
+
+	it := db.NewIterator(nil, nil)
+	ok := it.Seek([]byte(startKey))
+	for ok && it.Valid() && compare.CompareKeys(it.Key(), []byte(stopKey)) < 0 {
+		var metaDataKey indexMetaDataKey.IndexMetaDataKey
+		{
+			slice := it.Key()
+			if !(indexMetaDataKey.IndexMetaDataKey{}).Decode(&slice, &metaDataKey) {
+				panic("fail to decode metaDataKey")
+			}
+		}
+		if metaDataKey.MetaDataType != indexMetaDataKey.Name {
+			ok = it.Next()
+			continue
+		}
+
+		indexId := metaDataKey.IndexId
+		var indexName common.U16string
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeString(&slice, &indexName) || len(slice) != 0 {
+				panic("fail to decode indexName")
+			}
+		}
+
+		ok = it.Next()
+		if !ok || !CheckIndexAndMetaDataKey(it, stopKey, indexId, indexMetaDataKey.Unique) {
+			break
+		}
+		var indexUnique bool
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeBool(&slice, &indexUnique) || len(slice) != 0 {
+				panic("fail to decode indexUnique")
+			}
+		}
+
+		ok = it.Next()
+		if !ok || !CheckIndexAndMetaDataKey(it, stopKey, indexId, indexMetaDataKey.KeyPath) {
+			break
+		}
+		var keyPath indexedDBKeyPath.IndexedDBKeyPath
+		{
+			slice := it.Value()
+			if !leveldbCoding.DecodeIDBKeyPath(&slice, &keyPath) || len(slice) != 0 {
+				panic("fail to decode keyPath")
+			}
+		}
+
+		ok = it.Next()
+		if !ok {
+			break
+		}
+		var indexMultiEntry bool = false
+		if CheckIndexAndMetaDataKey(it, stopKey, indexId, indexMetaDataKey.MultiEntry) {
+			slice := it.Value()
+			if !leveldbCoding.DecodeBool(&slice, &indexMultiEntry) || len(slice) != 0 {
+				panic("fail to decode indexMultiEntry")
+			}
+			ok = it.Next()
+			if !ok {
+				break
+			}
+		}
+
+		indexes[indexId] = indexedDBIndexMetadata.IndexedDBIndexMetadata{
+			Name:       indexName,
+			Id:         indexId,
+			KeyPath:    keyPath,
+			Unique:     indexUnique,
+			MultiEntry: indexMultiEntry,
+		}
+	}
+
+	if !ok {
+		panic("internal read error: fail to get indexes")
+	}
+
+	return &indexes, nil
 }
 
 func ReadObjectStores(db *leveldb.DB, databaseId int64) (*map[int64]indexedDBObjectStoreMetadata.IndexedDBObjectStoreMetadata, error) {

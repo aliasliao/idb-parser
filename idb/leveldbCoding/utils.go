@@ -105,6 +105,10 @@ func EncodeInt(value int64, into *string) {
 	*into = ret
 }
 
+func EncodeByte(value byte, into *string) {
+	*into += string(value)
+}
+
 func DecodeInt(slice *[]byte, value *int64) bool {
 	sliceValue := *slice
 	if len(sliceValue) == 0 {
