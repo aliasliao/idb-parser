@@ -28,3 +28,12 @@ func (s U16string) ToString() string {
 	}
 	return string(buf)
 }
+
+func StringifyArray(array []U16string) []string {
+	n := len(array)
+	ret := make([]string, n)
+	for i, us := range array {
+		ret[i] = us.ToString()
+	}
+	return ret
+}

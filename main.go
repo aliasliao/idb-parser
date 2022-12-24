@@ -6,6 +6,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 
+	"idb-parser/idb/common"
 	"idb-parser/idb/leveldbCoding/compare"
 	"idb-parser/idb/metadataCoding"
 )
@@ -42,13 +43,13 @@ func main() {
 				log.Println()
 				log.Printf("  objectStoreId: %v\n", objectStoreId)
 				log.Printf("  name: %s\n", objectStoreMetadata.Name.ToString())
-				log.Printf("  keyPath: type=%v, string=%s, array=%v\n", objectStoreMetadata.KeyPath.Type, objectStoreMetadata.KeyPath.String.ToString(), objectStoreMetadata.KeyPath.Array)
+				log.Printf("  keyPath: type=%v, string=%s, array=%v\n", objectStoreMetadata.KeyPath.Type, objectStoreMetadata.KeyPath.String.ToString(), common.StringifyArray(objectStoreMetadata.KeyPath.Array))
 				log.Println()
 				log.Printf("  indexes length: %v, maxIndexId: %v\n", len(objectStoreMetadata.Indexes), objectStoreMetadata.MaxIndexId)
 				for indexId, indexMetadata := range objectStoreMetadata.Indexes {
 					log.Printf("    indexId: %v\n", indexId)
 					log.Printf("    name: %v\n", indexId)
-					log.Printf("    keyPath: type=%v, string=%s, array=%v\n", indexMetadata.KeyPath.Type, indexMetadata.KeyPath.String.ToString(), indexMetadata.KeyPath.Array)
+					log.Printf("    keyPath: type=%v, string=%s, array=%v\n", indexMetadata.KeyPath.Type, indexMetadata.KeyPath.String.ToString(), common.StringifyArray(indexMetadata.KeyPath.Array))
 					log.Printf("    unique: %v\n", indexMetadata.Unique)
 					log.Printf("    multiEntry: %v\n", indexMetadata.MultiEntry)
 					log.Println()
