@@ -25,7 +25,12 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	defer db.Close()
+	defer func(db *leveldb.DB) {
+		err := db.Close()
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}(db)
 
 	namesAndVersions, err := metadataCoding.ReadDatabaseNamesAndVersions(db, originIdentifier)
 	if err != nil {
