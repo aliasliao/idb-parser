@@ -1,9 +1,8 @@
-package databaseFreeListKey
+package compare
 
 import (
+	"idb-parser/idb/leveldbCoding/databaseFreeListKey"
 	"testing"
-
-	"idb-parser/idb/leveldbCoding/compare"
 )
 
 func TestFunctions(t *testing.T) {
@@ -11,7 +10,7 @@ func TestFunctions(t *testing.T) {
 		a := []byte{1, 2, 3, 4}
 		b := []byte{1, 2, 3, 4}
 		var ok = false
-		res := compare.CompareGeneric[DataBaseFreeListKey](a, b, false, &ok)
+		res := CompareGeneric[databaseFreeListKey.DataBaseFreeListKey](a, b, false, &ok)
 		if ok == true || res != 0 {
 			t.Error("not ok")
 		}

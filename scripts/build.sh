@@ -18,6 +18,10 @@ function main() {
     export GOOS="darwin"
     export GOARCH="amd64"
     EXT=""
+  elif [[ "$1" == "m1" ]] ; then
+    export GOOS="darwin"
+    export GOARCH="arm64"
+    EXT=""
   fi
 
   BIN_PATH="$APP_ROOT/build/idb$EXT"
