@@ -2,6 +2,7 @@
 
 > Read Chromium IndexedDB **OUTSIDE** browser.
 
+
 ### Usage
 
 ```shell
